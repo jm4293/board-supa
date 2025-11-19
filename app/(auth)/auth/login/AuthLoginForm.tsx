@@ -1,31 +1,52 @@
 'use client';
 
-import { useActionState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
 
 import { Card, Input, Link, SubmitButton } from '@/component/common';
 
-import { type FormState, loginUser } from './actions';
+import { useUserMutation } from '@/service/user';
 
-const initialState: FormState = {};
+const formSchema = z.object({
+  email: z.email('올바른 이메일 형식이 아닙니다'),
+  password: z.string().min(4, '비밀번호는 최소 4자리 이상이어야 합니다'),
+});
 
-export default function AuthLoginForm() {
-  const [state, formAction] = useActionState<FormState, FormData>(loginUser, initialState);
+type FormValues = z.infer<typeof formSchema>;
+
+export default function AuthLoginForm({ email }: { email: string | undefined }) {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      email,
+    },
+  });
+
+  const { loginUser } = useUserMutation();
+
+  const onSubmit = (data: FormValues) => {
+    const formData = new FormData();
+    formData.append('email', data.email);
+    formData.append('password', data.password);
+
+    loginUser.mutate(formData);
+  };
 
   return (
     <Card shadow="lg">
-      <form action={formAction} className="space-y-6">
-        {state.error && (
-          <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">{state.error}</div>
-        )}
-
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div>
           <Input
-            name="email"
             type="email"
             label="이메일"
             placeholder="email@example.com"
-            fullWidth
-            required
+            error={errors.email?.message}
+            {...register('email')}
             leftIcon={
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                 <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
@@ -37,13 +58,12 @@ export default function AuthLoginForm() {
 
         <div>
           <Input
-            name="password"
             type="password"
             label="비밀번호"
             placeholder="숫자 4자리 이상"
             helperText="숫자만 입력 가능하며 4자리 이상 입력하세요"
-            fullWidth
-            required
+            error={errors.password?.message}
+            {...register('password')}
             leftIcon={
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                 <path
@@ -66,7 +86,9 @@ export default function AuthLoginForm() {
           </Link>
         </div>
 
-        <SubmitButton fullWidth>로그인</SubmitButton>
+        <SubmitButton fullWidth disabled={loginUser.isPending}>
+          로그인
+        </SubmitButton>
       </form>
     </Card>
   );

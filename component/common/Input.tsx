@@ -1,4 +1,4 @@
-import React, { forwardRef } from "react";
+import React, { forwardRef } from 'react';
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -10,15 +10,15 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 }
 
 const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ label, error, helperText, fullWidth = true, leftIcon, rightIcon, className = "", disabled, ...props }, ref) => {
+  ({ label, error, helperText, fullWidth = true, leftIcon, rightIcon, className = '', disabled, ...props }, ref) => {
     const baseStyles =
-      "w-full px-4 py-2 text-base border rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-1 disabled:bg-gray-100 disabled:cursor-not-allowed";
+      'w-full px-4 py-2 text-base border rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-1 disabled:bg-gray-100 disabled:cursor-not-allowed';
 
-    const normalStyles = "border-gray-300 focus:border-blue-500 focus:ring-blue-500";
-    const errorStyles = "border-red-500 focus:border-red-500 focus:ring-red-500";
+    const normalStyles = 'border-gray-300 focus:border-blue-500 focus:ring-blue-500';
+    const errorStyles = 'border-red-500 focus:border-red-500 focus:ring-red-500';
 
-    const widthStyle = fullWidth ? "w-full" : "";
-    const paddingWithIcon = leftIcon ? "pl-10" : rightIcon ? "pr-10" : "";
+    const widthStyle = fullWidth ? 'w-full' : '';
+    const paddingWithIcon = leftIcon ? 'pl-10' : rightIcon ? 'pr-10' : '';
 
     return (
       <div className={widthStyle}>
@@ -46,9 +46,9 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         {helperText && !error && <p className="mt-1 text-sm text-gray-500">{helperText}</p>}
       </div>
     );
-  }
+  },
 );
 
-Input.displayName = "Input";
+Input.displayName = 'Input';
 
 export default Input;

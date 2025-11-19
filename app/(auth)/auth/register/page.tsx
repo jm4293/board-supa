@@ -2,7 +2,7 @@ import { Link } from '@/component/common';
 
 import AuthRegisterForm from './AuthRegisterForm';
 
-export default function AuthRegister() {
+export default function AuthRegisterPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 to-blue-100 px-4 py-12">
       <div className="w-full max-w-md">

@@ -1,67 +1,88 @@
 'use client';
 
+import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
-import { useActionState } from 'react';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
 
 import { Card, Input, SubmitButton } from '@/component/common';
 
-import { type FormState, registerUser } from './actions';
+import { useUserMutation } from '@/service/user';
 
-const initialState: FormState = {};
+const formSchema = z
+  .object({
+    username: z.string().min(2, '이름은 최소 2자 이상이어야 합니다'),
+    email: z.email('올바른 이메일 형식이 아닙니다'),
+    password: z.string().min(4, '비밀번호는 최소 4자리 이상이어야 합니다'),
+    passwordConfirm: z.string().min(4, '비밀번호는 최소 4자리 이상이어야 합니다'),
+  })
+  .refine((data) => data.password === data.passwordConfirm, {
+    message: '비밀번호가 일치하지 않습니다',
+    path: ['passwordConfirm'],
+  });
+
+type FormValues = z.infer<typeof formSchema>;
 
 export default function AuthRegisterForm() {
-  const [state, formAction] = useActionState<FormState, FormData>(registerUser, initialState);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+  });
+
+  const { registerUser } = useUserMutation();
+
+  const onSubmit = (data: FormValues) => {
+    const formData = new FormData();
+    formData.append('username', data.username);
+    formData.append('email', data.email);
+    formData.append('password', data.password);
+
+    registerUser.mutate(formData);
+  };
 
   return (
     <Card shadow="lg">
-      <form action={formAction} className="space-y-5">
-        {state.error && (
-          <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">{state.error}</div>
-        )}
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
         <div>
           <Input
-            name="username"
             type="text"
             label="이름"
-            placeholder="홍길동"
             helperText="이름은 최소 2자 이상 입력하세요"
-            fullWidth
-            required
-            minLength={2}
             leftIcon={
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
               </svg>
             }
+            error={errors.username?.message}
+            {...register('username')}
           />
         </div>
 
         <div>
           <Input
-            name="email"
             type="email"
             label="이메일"
             placeholder="email@example.com"
-            fullWidth
-            required
             leftIcon={
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                 <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
                 <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
               </svg>
             }
+            error={errors.email?.message}
+            {...register('email')}
           />
         </div>
 
         <div>
           <Input
-            name="password"
             type="password"
             label="비밀번호"
             placeholder="숫자 4자리 이상"
             helperText="숫자만 입력 가능하며 4자리 이상 입력하세요"
-            fullWidth
-            required
             leftIcon={
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                 <path
@@ -71,17 +92,16 @@ export default function AuthRegisterForm() {
                 />
               </svg>
             }
+            error={errors.password?.message}
+            {...register('password')}
           />
         </div>
 
         <div>
           <Input
-            name="passwordConfirm"
             type="password"
             label="비밀번호 확인"
             placeholder="비밀번호를 다시 입력하세요"
-            fullWidth
-            required
             leftIcon={
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                 <path
@@ -91,6 +111,8 @@ export default function AuthRegisterForm() {
                 />
               </svg>
             }
+            error={errors.passwordConfirm?.message}
+            {...register('passwordConfirm')}
           />
         </div>
 
@@ -116,7 +138,9 @@ export default function AuthRegisterForm() {
           </label>
         </div>
 
-        <SubmitButton fullWidth>회원가입</SubmitButton>
+        <SubmitButton fullWidth disabled={registerUser.isPending}>
+          회원가입
+        </SubmitButton>
       </form>
     </Card>
   );
