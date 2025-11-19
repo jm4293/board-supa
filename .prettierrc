@@ -1,0 +1,22 @@
+{
+  "singleQuote": true,
+  "bracketSpacing": true,
+  "jsxBracketSameLine": true,
+  "trailingComma": "all",
+  "tabWidth": 2,
+  "printWidth": 120,
+  "importOrder": [
+    "^@/app/(.*)$",
+    "^@/component/(.*)$",
+    "^@/config/(.*)$",
+    "^@/database/(.*)$",
+    "^@/hooks/(.*)$",
+    "^@/service/(.*)$",
+    "^@/share/(.*)$",
+    "^@/utils/(.*)$",
+    "^[./]"
+  ],
+  "importOrderSeparation": true,
+  "importOrderSortSpecifiers": true,
+  "plugins": ["@trivago/prettier-plugin-sort-imports"]
+}

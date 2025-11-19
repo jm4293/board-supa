@@ -1,0 +1,182 @@
+# AI Coding Rules & Guidelines
+
+## 프로젝트 개요
+
+- **Stack**: Next.js 16, TypeScript, Supabase, Tailwind CSS
+- **구조**: App Router 기반 Next.js 프로젝트
+- **데이터베이스**: Supabase (PostgreSQL)
+- **주 컬러**: 파란색 (Blue)
+
+## 코딩 스타일
+
+### TypeScript
+
+- **타입 안정성**: `any` 사용 금지, 명시적 타입 정의 필수
+- **Null 처리**: `null`과 `undefined`를 명확히 구분
+- **인터페이스**: Model과 별도로 Request/Response 타입 정의
+
+### 네이밍 컨벤션
+
+- **파일명**: kebab-case (예: `board-write-form.tsx`)
+- **컴포넌트**: PascalCase (예: `BoardWriteForm`)
+- **함수/변수**: camelCase (예: `getUserById`)
+- **상수**: UPPER_SNAKE_CASE (예: `MAX_RETRY_COUNT`)
+- **Interface**: PascalCase + Model 접미사 (예: `UserModel`, `BoardModel`)
+
+## 프로젝트 구조 규칙
+
+### 폴더 구조
+
+```
+app/                    # Next.js App Router (페이지, 레이아웃, Server Actions)
+  (main)/               # 메인 레이아웃 그룹
+    board/              # 게시판 관련 페이지
+      write/
+        actions.ts      # Server Actions
+        BoardWriteForm.tsx
+  auth/                 # 인증 관련 페이지
+component/              # React 컴포넌트
+  common/               # 공통 컴포넌트
+config/                 # 설정 파일
+  supabase/            # Supabase 클라이언트 설정
+database/
+  model/            # 데이터베이스 모델 (TypeScript Interface)
+public/                # 정적 파일
+service/               # 비즈니스 로직 서비스 레이어 (선택사항)
+share/                 # 공유 리소스
+  utils/               # 유틸리티 함수
+  const/               # 상수 정의
+  enum/                # Enum 정의
+```
+
+### 데이터베이스 모델 규칙
+
+#### Model 작성
+
+- 파일명: PascalCase (예: `User.ts`, `BoardComment.ts`)
+- TypeScript Interface로 정의
+- snake_case DB 컬럼명을 camelCase로 매핑: `name: "profile_image"` → `profileImage`
+- Model 접미사 사용: `UserModel`, `BoardModel`
+- nullable 필드는 `| null` 타입 명시
+
+**예시**:
+
+```typescript
+// database/entities/User.ts
+export interface UserModel {
+  id: number;
+  username: string;
+  nickname: string | null;
+  profileImage: string | null;
+  status: number | null;
+  createdAt: Date | null;
+  updatedAt: Date | null;
+}
+```
+
+### Supabase 사용 규칙
+
+#### 클라이언트 생성
+
+- **Server Component / Server Actions**: `createClient()` from `@/config/supabase/server` 사용
+- **Client Component**: `createBrowserClient()` from `@supabase/ssr` 사용
+
+#### 쿼리 작성
+
+- `.select()` 사용 시 필요한 컬럼만 명시
+- `.eq()`, `.neq()`, `.gt()`, `.lt()` 등 필터 메서드 활용
+- `.order()` 사용하여 정렬
+- `.range()` 사용하여 페이지네이션
+- 에러 처리 필수
+
+**예시**:
+
+```typescript
+const { data, error } = await supabase
+  .from('Board')
+  .select('id, title, content, created_at')
+  .eq('is_deleted', 0)
+  .order('created_at', { ascending: false })
+  .range(0, 9);
+
+if (error) {
+  throw new Error(error.message);
+}
+```
+
+### API 라우트 규칙
+
+- 파일 위치: `app/api/{resource}/route.ts` (필요시)
+- HTTP 메서드별 함수: `GET`, `POST`, `PUT`, `PATCH`, `DELETE`
+- 응답 형식:
+  ```typescript
+  return Response.json({ data, message }, { status: 200 });
+  ```
+- 에러 처리:
+  ```typescript
+  return Response.json({ error: message }, { status: 400 });
+  ```
+
+### Server Actions 규칙
+
+- 파일 위치: `app/**/actions.ts`
+- `'use server'` 디렉티브 필수
+- FormData 또는 명시적 타입으로 파라미터 받기
+- 에러 처리 및 redirect 처리
+- 세션 확인 후 보호된 작업 수행
+
+**예시**:
+
+```typescript
+'use server';
+
+import { createClient } from '@/config/supabase/server';
+import { redirect } from 'next/navigation';
+
+export async function createBoard(formData: FormData) {
+  const supabase = await createClient();
+  
+  // 세션 확인
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    redirect('/auth/login');
+  }
+  
+  // 작업 수행
+}
+```
+
+### 컴포넌트 규칙
+
+- Server Component 기본, Client Component는 `"use client"` 명시
+- Props 인터페이스는 컴포넌트 위에 정의
+- 스타일: Tailwind CSS 사용, 인라인 클래스 작성
+
+### 데이터베이스 규칙
+
+- 테이블명: PascalCase (예: `User`, `Board`, `BoardComment`)
+- 컬럼명: snake_case (예: `user_id`, `created_at`, `is_deleted`)
+- Primary Key: `id` (bigserial)
+- 타임스탬프: `created_at`, `updated_at` 필수
+- Soft Delete: `is_deleted` (smallint, 0/1), `deleted_at` (timestamp)
+- 인덱스: 검색/조인이 빈번한 컬럼에 설정
+
+## 주의사항
+
+- **비동기 처리**: async/await 사용, Promise 체이닝 지양
+- **에러 핸들링**: try-catch 블록 필수, 의미 있는 에러 메시지
+- **보안**: 환경변수로 민감 정보 관리 (`.env.local`)
+- **Supabase RLS**: Row Level Security 정책 설정 권장
+- **타입 안정성**: Supabase 쿼리 결과에 타입 캐스팅 사용
+- **코드 품질**: ESLint 규칙 준수, 불필요한 console.log 제거
+- **redirect 에러**: `NEXT_REDIRECT` 에러는 정상 동작이므로 다시 throw
+
+## 커밋 메시지
+
+- feat: 새로운 기능
+- fix: 버그 수정
+- refactor: 리팩토링
+- docs: 문서 수정
+- style: 코드 포맷팅
+- test: 테스트 추가/수정
+- chore: 빌드/설정 변경
