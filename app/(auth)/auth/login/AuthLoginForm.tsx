@@ -6,21 +6,20 @@ import { z } from 'zod';
 
 import { Card, Input, Link, SubmitButton } from '@/component/common';
 
-import { useUserMutation } from '@/service/user';
+import { LoginUserActionParams, useUserMutation } from '@/service/user';
 
 const formSchema = z.object({
   email: z.email('올바른 이메일 형식이 아닙니다'),
   password: z.string().min(4, '비밀번호는 최소 4자리 이상이어야 합니다'),
 });
 
-type FormValues = z.infer<typeof formSchema>;
-
 export default function AuthLoginForm({ email }: { email: string | undefined }) {
   const {
+    getValues,
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<FormValues>({
+  } = useForm<LoginUserActionParams>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       email,
@@ -29,12 +28,8 @@ export default function AuthLoginForm({ email }: { email: string | undefined }) 
 
   const { loginUser } = useUserMutation();
 
-  const onSubmit = (data: FormValues) => {
-    const formData = new FormData();
-    formData.append('email', data.email);
-    formData.append('password', data.password);
-
-    loginUser.mutate(formData);
+  const onSubmit = () => {
+    loginUser.mutate(getValues());
   };
 
   return (

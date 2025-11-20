@@ -8,12 +8,17 @@ import { passwordUtil } from '@/share/utils';
 
 import { UserAccountModel, UserModel } from '../model';
 
+export interface RegisterUserActionParams {
+  username: string;
+  email: string;
+  password: string;
+  passwordConfirm: string;
+}
+
 export const registerUserAction = async (
-  formData: FormData,
+  params: RegisterUserActionParams,
 ): Promise<ResponseType<{ user: UserModel; userAccount: UserAccountModel }>> => {
-  const username = formData.get('username') as string;
-  const email = formData.get('email') as string;
-  const password = formData.get('password') as string;
+  const { username, email, password } = params;
 
   const supabase = await createClient();
 

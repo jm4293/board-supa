@@ -6,9 +6,13 @@ import { DATABASE_TABLE } from '@/share/const';
 import { ResponseType } from '@/share/type/response.type';
 import { passwordUtil } from '@/share/utils';
 
-export const loginUserAction = async (formData: FormData): Promise<ResponseType> => {
-  const email = formData.get('email') as string;
-  const password = formData.get('password') as string;
+export interface LoginUserActionParams {
+  email: string;
+  password: string;
+}
+
+export const loginUserAction = async (params: LoginUserActionParams): Promise<ResponseType> => {
+  const { email, password } = params;
 
   const supabase = await createClient();
 

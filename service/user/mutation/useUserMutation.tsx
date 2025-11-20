@@ -1,13 +1,13 @@
 import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 
-import { loginUserAction, registerUserAction } from '../action';
+import { LoginUserActionParams, RegisterUserActionParams, loginUserAction, registerUserAction } from '../action';
 
 export const useUserMutation = () => {
   const router = useRouter();
 
   const loginUser = useMutation({
-    mutationFn: (formData: FormData) => loginUserAction(formData),
+    mutationFn: (params: LoginUserActionParams) => loginUserAction(params),
     onSuccess: (response) => {
       const { success, message } = response;
 
@@ -25,12 +25,17 @@ export const useUserMutation = () => {
   });
 
   const registerUser = useMutation({
-    mutationFn: (formData: FormData) => registerUserAction(formData),
-    onSuccess: (_, variables) => {
-      const email = variables.get('email') as string;
+    mutationFn: (params: RegisterUserActionParams) => registerUserAction(params),
+    onSuccess: (response) => {
+      const { success, message, data } = response;
+
+      if (!success) {
+        alert(message);
+        return;
+      }
 
       alert('회원가입이 완료되었습니다.');
-      router.push(`/auth/login?email=${email}`);
+      router.push(`/auth/login?email=${data?.userAccount?.email}`);
     },
     onError: (error) => {
       throw error;

@@ -7,7 +7,7 @@ import { z } from 'zod';
 
 import { Card, Input, SubmitButton } from '@/component/common';
 
-import { useUserMutation } from '@/service/user';
+import { RegisterUserActionParams, useUserMutation } from '@/service/user';
 
 const formSchema = z
   .object({
@@ -21,26 +21,20 @@ const formSchema = z
     path: ['passwordConfirm'],
   });
 
-type FormValues = z.infer<typeof formSchema>;
-
 export default function AuthRegisterForm() {
   const {
+    getValues,
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<FormValues>({
+  } = useForm<RegisterUserActionParams>({
     resolver: zodResolver(formSchema),
   });
 
   const { registerUser } = useUserMutation();
 
-  const onSubmit = (data: FormValues) => {
-    const formData = new FormData();
-    formData.append('username', data.username);
-    formData.append('email', data.email);
-    formData.append('password', data.password);
-
-    registerUser.mutate(formData);
+  const onSubmit = () => {
+    registerUser.mutate(getValues());
   };
 
   return (
