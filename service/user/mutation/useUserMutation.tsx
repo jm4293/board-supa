@@ -17,6 +17,7 @@ export const useUserMutation = () => {
       }
 
       alert('로그인이 완료되었습니다.');
+
       router.push(`/home`);
     },
     onError: (error) => {
