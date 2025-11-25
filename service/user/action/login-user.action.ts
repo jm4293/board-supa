@@ -1,7 +1,5 @@
 'use server';
 
-import { cookies } from 'next/headers';
-
 import { createClient } from '@/config/supabase/server';
 
 import { DATABASE_TABLE } from '@/share/const';
@@ -38,39 +36,18 @@ export const loginUserAction = async (params: LoginUserActionParams): Promise<Re
     }
 
     const user = await supabase.from(DATABASE_TABLE.USER).select('*').eq('id', userAccount.data.userId).single();
+
     if (!user.data) {
       throw new Error('User not found');
     }
 
-    if (!(await cookieUtil.isCookieExists())) {
-      // JWT 토큰 생성
-      const accessToken = jwtUtil.generateAccessToken(user.data.id, user.data.email);
-      const refreshToken = jwtUtil.generateRefreshToken(user.data.id, user.data.email);
+    // JWT 토큰 생성
+    const accessToken = jwtUtil.generateAccessToken(user.data.id, user.data.email);
+    const refreshToken = jwtUtil.generateRefreshToken(user.data.id, user.data.email);
 
-      // 쿠키에 토큰 저장
-      await cookieUtil.setAccessToken(accessToken);
-      await cookieUtil.setRefreshToken(refreshToken);
-
-      return {
-        success: true,
-        data: null,
-        message: null,
-      };
-    }
-
-    const isValidRefreshToken = await cookieUtil.validateRefreshToken();
-    if (!isValidRefreshToken) {
-      // JWT 토큰 생성
-      const accessToken = jwtUtil.generateAccessToken(user.data.id, user.data.email);
-      const refreshToken = jwtUtil.generateRefreshToken(user.data.id, user.data.email);
-
-      // 쿠키에 토큰 저장
-      await cookieUtil.setAccessToken(accessToken);
-      await cookieUtil.setRefreshToken(refreshToken);
-    } else {
-      const accessToken = jwtUtil.generateAccessToken(user.data.id, user.data.email);
-      await cookieUtil.setAccessToken(accessToken);
-    }
+    // 쿠키에 토큰 저장
+    await cookieUtil.setAccessToken(accessToken);
+    await cookieUtil.setRefreshToken(refreshToken);
 
     return {
       success: true,
