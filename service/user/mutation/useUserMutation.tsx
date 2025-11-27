@@ -1,7 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 
-import { LoginUserActionParams, RegisterUserActionParams, loginUserAction, registerUserAction } from '../action';
+import { LoginUserActionParams, RegisterUserActionParams, loginUserAction, registerUserAction, kakaoLoginAction } from '../action';
 
 export const useUserMutation = () => {
   const router = useRouter();
@@ -43,8 +43,29 @@ export const useUserMutation = () => {
     },
   });
 
+  const loginKakao = useMutation({
+    mutationFn: () => kakaoLoginAction(),
+    onSuccess: (response) => {
+      const { success, message, data } = response;
+
+      if (!success) {
+        alert(message || '카카오 로그인에 실패했습니다.');
+        return;
+      }
+
+      if (data?.url) {
+        window.location.href = data.url;
+      }
+    },
+    onError: (error) => {
+      alert('카카오 로그인에 실패했습니다.');
+      throw error;
+    },
+  });
+
   return {
     loginUser,
     registerUser,
+    loginKakao,
   };
 };

@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -26,12 +27,15 @@ export default function AuthLoginForm({ email }: { email: string | undefined }) 
     },
   });
 
-  const { loginUser } = useUserMutation();
-
+  const { loginUser, loginKakao } = useUserMutation();
   const onSubmit = () => {
     loginUser.mutate(getValues());
   };
 
+  const handleKakaoLogin = () => {
+    loginKakao.mutate();
+  };
+  
   return (
     <Card shadow="lg">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -85,6 +89,29 @@ export default function AuthLoginForm({ email }: { email: string | undefined }) 
           로그인
         </SubmitButton>
       </form>
+
+      {/* 소셜 로그인 */}
+      <div className="mt-6">
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-300"></div>
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-2 bg-white text-gray-500">소셜 계정으로 로그인</span>
+          </div>
+        </div>
+
+        <div className="mt-6">
+          <button
+            type="button"
+            className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-400 disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={handleKakaoLogin}
+          >
+            <Image src="/kakaotalk.png" alt="카카오톡" width={24} height={24} />
+            <span className="text-gray-700 font-medium">카카오로 로그인</span>
+          </button>
+        </div>
+      </div>
     </Card>
   );
 }

@@ -17,7 +17,6 @@ export default async function AuthLoginPage({ searchParams }: { searchParams: Pr
 
         {/* 로그인 폼 */}
         <AuthLoginForm email={email} />
-
         {/* 회원가입 링크 */}
         <div className="text-center mt-6">
           <span className="text-gray-600">아직 계정이 없으신가요? </span>
