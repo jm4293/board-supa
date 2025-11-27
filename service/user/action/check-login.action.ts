@@ -1,3 +1,4 @@
+'use server';
 import { ResponseType } from '@/share/type/response.type';
 import { cookieUtil } from '@/share/utils/cookie';
 

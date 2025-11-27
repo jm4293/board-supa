@@ -1,21 +1,16 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import Button from './Button';
-
-interface UserInfo {
-  userId: number;
-  username: string;
-  email: string;
-}
+import { checkLoginAction } from '@/service/user/action/check-login.action';
+import { logoutUserAction } from '@/service/user/action/logout-user.action';
 
 export default function Header() {
-  const router = useRouter();
   const pathname = usePathname();
-  const [user, setUser] = useState<UserInfo | null>(null);
+  const [isLogin, setIsLogin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -24,11 +19,9 @@ export default function Header() {
 
   const checkAuth = async () => {
     try {
-      const response = await fetch('/api/auth/me');
-      const data = await response.json();
-
-      if (data.success && data.data) {
-        setUser(data.data);
+      const response = await checkLoginAction();
+      if (response.success) {
+        setIsLogin(true);
       }
     } catch {
       // Error handling
@@ -39,16 +32,14 @@ export default function Header() {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch('/api/auth/logout', {
-        method: 'POST',
-      });
+      const response = await logoutUserAction();
 
-      if (response.ok) {
-        setUser(null);
-        router.push('/auth/login');
+      if (response.success) {
+        setIsLogin(false);
+        alert(response.message);
       }
-    } catch {
-      // Error handling
+    } catch (error) {
+      return alert(error);
     }
   };
 
@@ -87,11 +78,8 @@ export default function Header() {
           </div>
 
           <div className="flex items-center space-x-4">
-            {user ? (
+            {isLogin ? (
               <>
-                <span className="text-sm text-gray-600">
-                  <span className="font-medium">{user.username}</span>님 환영합니다
-                </span>
                 <Button variant="secondary" size="sm" onClick={handleLogout}>
                   로그아웃
                 </Button>

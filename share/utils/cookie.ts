@@ -62,12 +62,9 @@ export const cookieUtil = {
   /**
    * Token 삭제
    */
-  clearAccessToken: async () => {
+  clearAllTokens: async () => {
     const cookieStore = await cookies();
     cookieStore.delete(ACCESS_TOKEN_COOKIE_NAME);
-  },
-  clearRefreshToken: async () => {
-    const cookieStore = await cookies();
     cookieStore.delete(REFRESH_TOKEN_COOKIE_NAME);
   },
 };
