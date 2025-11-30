@@ -1,12 +1,20 @@
+'use client';
+
 import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 
-import { LoginUserActionParams, RegisterUserActionParams, loginUserAction, registerUserAction } from '../action';
+import {
+  LoginUserActionParams,
+  RegisterUserActionParams,
+  kakaoLoginAction,
+  loginUserAction,
+  registerUserAction,
+} from '../action';
 
 export const useUserMutation = () => {
   const router = useRouter();
 
-  const loginUser = useMutation({
+  const emailLogin = useMutation({
     mutationFn: (params: LoginUserActionParams) => loginUserAction(params),
     onSuccess: (response) => {
       const { success, message } = response;
@@ -17,6 +25,24 @@ export const useUserMutation = () => {
       }
 
       alert('로그인이 완료되었습니다.');
+      router.push(`/home`);
+    },
+    onError: (error) => {
+      throw error;
+    },
+  });
+
+  const kakaoLogin = useMutation({
+    mutationFn: (code: string) => kakaoLoginAction(code),
+    onSuccess: (response) => {
+      const { success, message } = response;
+
+      if (!success) {
+        alert(message);
+        return;
+      }
+
+      alert('카카오 로그인이 완료되었습니다.');
       router.push(`/home`);
     },
     onError: (error) => {
@@ -43,7 +69,8 @@ export const useUserMutation = () => {
   });
 
   return {
-    loginUser,
+    emailLogin,
+    kakaoLogin,
     registerUser,
   };
 };

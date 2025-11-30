@@ -1,4 +1,6 @@
-import { Link } from '@/component/common';
+import { Card, Link } from '@/component/common';
+
+import { KAKAO_REDIRECT_URI, KAKAO_REST_API_KEY } from '@/share/const/kakao';
 
 import AuthLoginForm from './AuthLoginForm';
 
@@ -15,8 +17,18 @@ export default async function AuthLoginPage({ searchParams }: { searchParams: Pr
           <p className="text-gray-600">로그인하여 게시판을 이용하세요</p>
         </div>
 
-        {/* 로그인 폼 */}
-        <AuthLoginForm email={email} />
+        <div className="space-y-4">
+          <AuthLoginForm email={email} />
+
+          <Card>
+            <Link
+              href={`https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_REST_API_KEY}&redirect_uri=${KAKAO_REDIRECT_URI}&response_type=code`}
+              variant="primary"
+              className="font-semibold">
+              카카오 로그인
+            </Link>
+          </Card>
+        </div>
 
         {/* 회원가입 링크 */}
         <div className="text-center mt-6">

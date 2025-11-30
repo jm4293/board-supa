@@ -1,7 +1,7 @@
 export interface UserModel {
   id: number;
   username: string;
-  nickname: string | null;
+  nickname: string;
   profileImage: string | null;
   status: number | null;
   createdAt: Date | null;
