@@ -3,11 +3,12 @@
 import axios from 'axios';
 
 import { ResponseType } from '@/share/type/response.type';
+import { cookieUtil } from '@/share/utils/cookie';
 
 const KAKAO_CLIENT_ID = process.env.REST_API_KEY;
 const KAKAO_REDIRECT_URI = process.env.NEXT_PUBLIC_KAKAO_REDIRECT_URI;
 
-export const kakaoLoginAction = async (): Promise<ResponseType<{ url: string }>> => {
+export const requestAuthorizationCodeAction = async (): Promise<ResponseType<{ url: string }>> => {
   try {
     if (!KAKAO_CLIENT_ID || !KAKAO_REDIRECT_URI) {
       return {
@@ -51,6 +52,11 @@ export const requestKakaoTokenAction = async (code: string): Promise<ResponseTyp
         'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
       },
     });
+
+    const { access_token, refresh_token, expires_in, refresh_token_expires_in } = response.data;
+
+    await cookieUtil.setAccessToken(access_token, expires_in * 1000);
+    await cookieUtil.setRefreshToken(refresh_token, refresh_token_expires_in * 1000);
 
     return {
       success: true,
