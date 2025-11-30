@@ -2,12 +2,8 @@
 
 import { cookies } from 'next/headers';
 
-import { createClient } from '@/config/supabase/server';
-
-import { DATABASE_TABLE, SESSION_TOKEN_NAME } from '@/share/const';
-import { jwtUtil } from '@/share/utils/jwt';
-
-import { UserModel } from '..';
+import { SESSION_TOKEN_NAME } from '@/share/const';
+import { jwtUtil } from '@/share/utils';
 
 export const getUserInfoAction = async () => {
   const cookieStore = await cookies();
@@ -22,7 +18,7 @@ export const getUserInfoAction = async () => {
     };
   }
 
-  const tokenData = jwtUtil().verify(sessionToken.value);
+  const tokenData = jwtUtil.verify(sessionToken.value);
 
   if (!tokenData) {
     return {

@@ -8,6 +8,7 @@ import {
   RegisterUserActionParams,
   kakaoLoginAction,
   loginUserAction,
+  logoutAction,
   registerUserAction,
 } from '../action';
 
@@ -68,9 +69,28 @@ export const useUserMutation = () => {
     },
   });
 
+  const logout = useMutation({
+    mutationFn: () => logoutAction(),
+    onSuccess: (response) => {
+      const { success, message } = response;
+
+      if (!success) {
+        alert(message);
+        return;
+      }
+
+      alert('로그아웃이 완료되었습니다.');
+      router.refresh();
+    },
+    onError: (error) => {
+      throw error;
+    },
+  });
+
   return {
     emailLogin,
     kakaoLogin,
     registerUser,
+    logout,
   };
 };

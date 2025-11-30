@@ -9,12 +9,12 @@ import { setSessionToken } from '@/share/utils/auth';
 import { UserAccountModel, UserModel } from '..';
 
 export const kakaoLoginAction = async (code: string): Promise<ResponseType> => {
-  const response = await fetch(
+  const tokenResponse = await fetch(
     `https://kauth.kakao.com/oauth/token?grant_type=authorization_code&client_id=${KAKAO_REST_API_KEY}&redirect_uri=${KAKAO_REDIRECT_URI}&code=${code}&client_secret=${KAKAO_CLIENT_SECRET}`,
     { method: 'GET' },
   );
 
-  if (!response.ok) {
+  if (!tokenResponse.ok) {
     return {
       success: false,
       data: null,
@@ -22,7 +22,7 @@ export const kakaoLoginAction = async (code: string): Promise<ResponseType> => {
     };
   }
 
-  const { access_token } = await response.json();
+  const { access_token } = await tokenResponse.json();
 
   const userResponse = await fetch('https://kapi.kakao.com/v2/user/me?secure_resource=false', {
     method: 'GET',

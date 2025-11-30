@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers';
 
 import { SESSION_TOKEN_EXPIRE, SESSION_TOKEN_NAME } from '@/share/const';
-import { jwtUtil } from '@/share/utils/jwt';
+import { jwtUtil } from '@/share/utils';
 
 const SESSION_COOKIE_NAME = 'session';
 const SESSION_MAX_AGE = 60 * 60 * 24 * 7; // 7일
@@ -24,7 +24,7 @@ export interface SetSessionTokenParams {
  * Server Action에서 사용할 수 있습니다.
  */
 export async function setSessionToken(params: SetSessionTokenParams): Promise<void> {
-  const sessionToken = jwtUtil().sign({ ...params }, SESSION_TOKEN_EXPIRE);
+  const sessionToken = jwtUtil.sign({ ...params }, SESSION_TOKEN_EXPIRE);
 
   const cookieStore = await cookies();
 

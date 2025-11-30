@@ -6,37 +6,7 @@ import Button from '../../component/common/Button';
 import HeaderLink from './HeaderLink';
 import LogoutButton from './LogoutButton';
 
-interface UserInfo {
-  userId: number;
-  username: string;
-  email: string;
-}
-
 export default async function Header() {
-  // const router = useRouter();
-  // const pathname = usePathname();
-  // const [user, setUser] = useState<UserInfo | null>(null);
-  // const [isLoading, setIsLoading] = useState(true);
-
-  // useEffect(() => {
-  //   checkAuth();
-  // }, []);
-
-  // const checkAuth = async () => {
-  //   try {
-  //     const response = await fetch('/api/auth/me');
-  //     const data = await response.json();
-
-  //     if (data.success && data.data) {
-  //       setUser(data.data);
-  //     }
-  //   } catch {
-  //     // Error handling
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
-
   const { data, success } = await getUserInfoAction();
 
   return (
