@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import Button from './Button';
@@ -10,11 +10,15 @@ import { logoutUserAction } from '@/service/user/action/logout-user.action';
 
 export default function Header() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [isLogin, setIsLogin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    checkAuth();
+    const code = searchParams.get('code');
+    if (!code) {
+      checkAuth();
+    }
   }, []);
 
   const checkAuth = async () => {
