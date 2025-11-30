@@ -27,15 +27,15 @@ export default function AuthLoginForm({ email }: { email: string | undefined }) 
     },
   });
 
-  const { loginUser, loginKakao } = useUserMutation();
+  const { loginUser, requestAuthorizationCode } = useUserMutation();
   const onSubmit = () => {
     loginUser.mutate(getValues());
   };
 
   const handleKakaoLogin = () => {
-    loginKakao.mutate();
+    requestAuthorizationCode.mutate();
   };
-  
+
   return (
     <Card shadow="lg">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
