@@ -9,33 +9,36 @@ export const cookieUtil = {
   /**
    * 쿠키 저장
    */
-  setAccessToken: async (token: string) => {
+  setAccessToken: async (token: string, maxAge?: number) => {
     const cookieStore = await cookies();
     cookieStore.set(ACCESS_TOKEN_COOKIE_NAME, token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 10 * 60 * 1000,
+      maxAge: maxAge ?? 10 * 60 * 1000,
       path: '/',
     });
   },
 
-  setRefreshToken: async (token: string) => {
+  setRefreshToken: async (token: string, maxAge?: number) => {
     const cookieStore = await cookies();
     cookieStore.set(REFRESH_TOKEN_COOKIE_NAME, token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 1 * 24 * 60 * 60 * 1000,
+      maxAge: maxAge ?? 1 * 24 * 60 * 60 * 1000,
       path: '/',
     });
   },
   /**
    * 쿠키 조회
-   */   
+   */
   isCookieExists: async (): Promise<boolean> => {
     const cookieStore = await cookies();
-    return cookieStore.get(ACCESS_TOKEN_COOKIE_NAME)?.value !== null || cookieStore.get(REFRESH_TOKEN_COOKIE_NAME)?.value !== null;
+    return (
+      cookieStore.get(ACCESS_TOKEN_COOKIE_NAME)?.value !== null ||
+      cookieStore.get(REFRESH_TOKEN_COOKIE_NAME)?.value !== null
+    );
   },
   getAccessToken: async (): Promise<string | null> => {
     const cookieStore = await cookies();
@@ -51,13 +54,18 @@ export const cookieUtil = {
    */
   validateAccessToken: async () => {
     const accessToken = await cookieUtil.getAccessToken();
-    return accessToken !== null && jwtUtil.verifyToken(accessToken);
+    if (!accessToken) {
+      return false;
+    }
+    if (jwtUtil.verifyToken(accessToken)) {
+      return accessToken !== null && jwtUtil.verifyToken(accessToken);
+    }
+    return accessToken !== null;
   },
   validateRefreshToken: async () => {
     const refreshToken = await cookieUtil.getRefreshToken();
     return refreshToken !== null && jwtUtil.verifyToken(refreshToken);
   },
-
 
   /**
    * Token 삭제
