@@ -1,3 +1,5 @@
+import { UserModel } from '.';
+
 export interface UserAccountModel {
   id: number;
   userId: number;
@@ -6,4 +8,6 @@ export interface UserAccountModel {
   provider: number;
   createdAt: Date | null;
   updatedAt: Date | null;
+
+  user: UserModel;
 }
