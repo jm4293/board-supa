@@ -180,7 +180,29 @@ export interface BoardListResponse {
 
 ---
 
-## 3. Form Validation (React Hook Form + Zod)
+## 3. Form 처리 및 API 요청 패턴 (React Hook Form + Zod + Mutation + Server Action)
+
+### 전체 아키텍처
+
+프로젝트의 모든 API 요청은 다음 패턴을 따릅니다:
+
+```
+Form Component (Client)
+  → Mutation Hook (React Query)
+    → Server Action (Server)
+      → Supabase
+```
+
+### 패턴 구성 요소
+
+1. **Form Component**: React Hook Form + Zod로 폼 검증
+2. **Mutation Hook**: React Query의 `useMutation`으로 상태 관리
+3. **Server Action**: 서버 측 비즈니스 로직 처리
+4. **ResponseType**: 일관된 응답 형식
+
+---
+
+## 3-1. Form Validation (React Hook Form + Zod)
 
 ### 설치
 
@@ -258,136 +280,266 @@ export default function BoardWriteForm() {
 #### 4. 제출 버튼
 
 ```typescript
-<SubmitButton text="등록하기" disabled={isSubmitting} />
+<SubmitButton text="등록하기" disabled={mutation.isPending} />
 ```
 
 ### 주요 기능
 
-| 기능           | 설명                | 사용법                                      |
-| -------------- | ------------------- | ------------------------------------------- |
-| `register`     | Input을 폼에 등록   | `{...register('fieldName')}`                |
-| `handleSubmit` | 폼 제출 처리        | `onSubmit={handleSubmit(onSubmit)}`         |
-| `getValues`    | 현재 폼 값 가져오기 | `getValues()` 또는 `getValues('fieldName')` |
-| `errors`       | 검증 에러 확인      | `errors.fieldName?.message`                 |
-| `isSubmitting` | 제출 중 상태        | `formState.isSubmitting`                    |
+| 기능           | 설명                | 사용법                                                                |
+| -------------- | ------------------- | --------------------------------------------------------------------- |
+| `register`     | Input을 폼에 등록   | `{...register('fieldName')}`                                          |
+| `handleSubmit` | 폼 제출 처리        | `onSubmit={handleSubmit(onSubmit)}`                                   |
+| `getValues`    | 현재 폼 값 가져오기 | `getValues()` 또는 `getValues('fieldName')`                           |
+| `errors`       | 검증 에러 확인      | `errors.fieldName?.message`                                           |
+| `isSubmitting` | 제출 중 상태        | `formState.isSubmitting` (Mutation 사용 시 `mutation.isPending` 권장) |
 
 ---
 
-## 4. 프로젝트 구조 권장사항
+## 3-2. Mutation 패턴 (React Query)
+
+### 설치
+
+```bash
+npm install @tanstack/react-query
+```
+
+### QueryProvider 설정
+
+루트 레이아웃에 `QueryProvider`를 추가합니다:
+
+```typescript
+// app/layout.tsx
+import { QueryProvider } from '@/config/react-query/QueryProvider';
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html>
+      <body>
+        <QueryProvider>{children}</QueryProvider>
+      </body>
+    </html>
+  );
+}
+```
+
+### Mutation Hook 작성
+
+**파일 위치**: `service/{domain}/mutation/use{Mutation}Mutation.tsx`
+
+**예시**:
+
+```typescript
+import { useMutation } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
+
+import { loginUserAction } from '../action';
+
+export const useUserMutation = () => {
+  const router = useRouter();
+
+  const loginUser = useMutation({
+    mutationFn: (formData: FormData) => loginUserAction(formData),
+    onSuccess: (response) => {
+      const { success, message } = response;
+
+      if (!success) {
+        alert(message);
+        return;
+      }
+
+      alert('로그인이 완료되었습니다.');
+      router.push('/home');
+    },
+    onError: (error) => {
+      throw error;
+    },
+  });
+
+  return {
+    loginUser,
+  };
+};
+```
+
+### Form에서 Mutation 사용
+
+```typescript
+'use client';
+
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+
+import { useUserMutation } from '@/service/user';
+
+const formSchema = z.object({
+  email: z.string().email('올바른 이메일 형식이 아닙니다'),
+  password: z.string().min(4, '비밀번호는 최소 4자리 이상이어야 합니다'),
+});
+
+type FormValues = z.infer<typeof formSchema>;
+
+export default function AuthLoginForm() {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+  });
+
+  const { loginUser } = useUserMutation();
+
+  const onSubmit = (data: FormValues) => {
+    const formData = new FormData();
+    formData.append('email', data.email);
+    formData.append('password', data.password);
+
+    loginUser.mutate(formData);
+  };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      {/* 폼 필드 */}
+      <SubmitButton disabled={loginUser.isPending}>로그인</SubmitButton>
+    </form>
+  );
+}
+```
+
+### Mutation 주요 속성
+
+| 속성         | 설명          | 사용법                               |
+| ------------ | ------------- | ------------------------------------ |
+| `mutationFn` | 실행할 함수   | `mutationFn: (data) => action(data)` |
+| `onSuccess`  | 성공 시 콜백  | `onSuccess: (response) => {}`        |
+| `onError`    | 에러 시 콜백  | `onError: (error) => {}`             |
+| `isPending`  | 진행 중 상태  | `mutation.isPending`                 |
+| `mutate`     | Mutation 실행 | `mutation.mutate(data)`              |
+
+---
+
+## 3-3. Server Action 패턴
+
+### ResponseType 정의
+
+모든 Server Action은 `ResponseType<T>`을 반환합니다:
+
+```typescript
+// share/type/response.type.ts
+export interface ResponseType<T = undefined> {
+  success: boolean;
+  data: T | null;
+  message: string | null;
+}
+```
+
+### Server Action 작성
+
+**파일 위치**: `service/{domain}/action/{action-name}.action.ts`
+
+**예시**:
+
+```typescript
+'use server';
+
+import { createClient } from '@/config/supabase/server';
+
+import { DATABASE_TABLE } from '@/share/const';
+import { ResponseType } from '@/share/type/response.type';
+
+export const loginUserAction = async (formData: FormData): Promise<ResponseType> => {
+  const email = formData.get('email') as string;
+  const password = formData.get('password') as string;
+
+  const supabase = await createClient();
+
+  try {
+    // 비즈니스 로직 처리
+    const userAccount = await supabase.from(DATABASE_TABLE.USER_ACCOUNT).select('*').eq('email', email).single();
+
+    if (!userAccount.data) {
+      return {
+        success: false,
+        data: null,
+        message: '사용자를 찾을 수 없습니다',
+      };
+    }
+
+    // 성공 응답
+    return {
+      success: true,
+      data: null,
+      message: null,
+    };
+  } catch (error) {
+    throw error;
+  }
+};
+```
+
+### Server Action 규칙
+
+1. **파일 위치**: `service/{domain}/action/{action-name}.action.ts`
+2. **디렉티브**: `'use server'` 필수
+3. **파라미터**: FormData 또는 명시적 타입
+4. **반환 타입**: `Promise<ResponseType<T>>`
+5. **에러 처리**: try-catch 블록 필수
+6. **에러 throw**: 예상치 못한 에러는 throw하여 Mutation의 `onError`에서 처리
+
+### Server Action Export
+
+```typescript
+// service/{domain}/action/index.ts
+export * from './login-user.action';
+export * from './register-user.action';
+```
+
+### Service Export
+
+```typescript
+// service/{domain}/index.ts
+export * from './action';
+export * from './mutation';
+export * from './model';
+```
+
+---
+
+## 5. 프로젝트 구조 패턴
+
+### 권장 구조
 
 ```
-database/
-  entities/              # Model 정의 (TypeScript Interface)
-    User.ts
-    Board.ts
-    BoardComment.ts
+service/
+  {domain}/                    # 도메인별 폴더 (예: user, board)
+    action/                    # Server Actions
+      {action-name}.action.ts
+      index.ts                 # Export 파일
+    mutation/                  # React Query Mutations
+      use{Mutation}Mutation.tsx
+      index.ts                 # Export 파일
+    model/                     # 도메인별 Model (선택사항)
+      {Model}.ts
+      index.ts
+    index.ts                   # 전체 Export
 
 app/
   (main)/
     board/
       write/
-        actions.ts       # Server Actions
-        BoardWriteForm.tsx
+        BoardWriteForm.tsx     # Form Component (Client)
       [id]/
-        actions.ts
-        BoardDetail.tsx
-
-service/                 # 비즈니스 로직 & 변환 로직 (선택사항)
-  board/
-    get-board-list.service.ts
+        BoardDetail.tsx        # Page Component
 ```
 
-**핵심 원칙**:
+### 구조 원칙
 
-- `database/entities/`: 데이터베이스 구조 정의 (Model Interface)
-- `app/**/actions.ts`: Server Actions (비즈니스 로직)
-- `app/**/*.tsx`: React 컴포넌트
-- `service/`: 복잡한 비즈니스 로직이나 Model ↔ Response 변환 로직
-
----
-
-## 5. Server Actions 패턴
-
-### 기본 구조
-
-```typescript
-'use server';
-
-import { redirect } from 'next/navigation';
-
-import { createClient } from '@/config/supabase/server';
-
-export async function createBoard(formData: FormData) {
-  const supabase = await createClient();
-
-  // 세션 확인
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    redirect('/auth/login');
-  }
-
-  // 데이터 추출
-  const title = formData.get('title') as string;
-  const content = formData.get('content') as string;
-
-  // 유효성 검사
-  if (!title || !title.trim()) {
-    throw new Error('제목을 입력해주세요');
-  }
-
-  // 데이터베이스 작업
-  const { data, error } = await supabase
-    .from('Board')
-    .insert({
-      user_id: user.id,
-      title: title.trim(),
-      content: content.trim(),
-      view_count: 0,
-      is_deleted: 0,
-    })
-    .select()
-    .single();
-
-  if (error) {
-    throw new Error('게시글 작성에 실패했습니다');
-  }
-
-  redirect(`/board/${data.id}`);
-}
-```
-
-### 에러 처리
-
-```typescript
-export interface FormState {
-  error?: string;
-}
-
-export async function createBoard(prevState: FormState | null, formData: FormData): Promise<FormState> {
-  try {
-    // ... 작업 수행
-    return {};
-  } catch (error) {
-    // redirect()는 NEXT_REDIRECT 에러를 throw하는데, 이것은 정상 동작이므로 다시 throw
-    if (
-      error &&
-      typeof error === 'object' &&
-      'digest' in error &&
-      typeof error.digest === 'string' &&
-      error.digest.startsWith('NEXT_REDIRECT')
-    ) {
-      throw error;
-    }
-
-    const errorMessage = error instanceof Error ? error.message : '작업에 실패했습니다';
-    return {
-      error: errorMessage,
-    };
-  }
-}
-```
+1. **Service 레이어**: 비즈니스 로직과 API 호출을 `service/` 폴더에서 관리
+2. **도메인별 분리**: 기능별로 도메인 폴더로 분리 (user, board 등)
+3. **Action 분리**: Server Action은 `action/` 폴더에 별도 관리
+4. **Mutation 분리**: React Query Mutation은 `mutation/` 폴더에 별도 관리
+5. **Form Component**: 페이지와 같은 위치에 배치하되, Client Component로 분리
 
 ---
 
@@ -426,6 +578,181 @@ export async function protectedAction() {
 
 ---
 
+## 6. 완전한 예시: 로그인 기능 구현
+
+### 1. Zod 스키마 정의 (Form Component 내부)
+
+```typescript
+const formSchema = z.object({
+  email: z.string().email('올바른 이메일 형식이 아닙니다'),
+  password: z.string().min(4, '비밀번호는 최소 4자리 이상이어야 합니다'),
+});
+
+type FormValues = z.infer<typeof formSchema>;
+```
+
+### 2. Form Component 작성
+
+```typescript
+// app/(auth)/auth/login/AuthLoginForm.tsx
+'use client';
+
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+
+import { Input, SubmitButton } from '@/component/common';
+import { useUserMutation } from '@/service/user';
+
+const formSchema = z.object({
+  email: z.string().email('올바른 이메일 형식이 아닙니다'),
+  password: z.string().min(4, '비밀번호는 최소 4자리 이상이어야 합니다'),
+});
+
+type FormValues = z.infer<typeof formSchema>;
+
+export default function AuthLoginForm() {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+  });
+
+  const { loginUser } = useUserMutation();
+
+  const onSubmit = (data: FormValues) => {
+    const formData = new FormData();
+    formData.append('email', data.email);
+    formData.append('password', data.password);
+
+    loginUser.mutate(formData);
+  };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <Input
+        type="email"
+        label="이메일"
+        error={errors.email?.message}
+        {...register('email')}
+      />
+      <Input
+        type="password"
+        label="비밀번호"
+        error={errors.password?.message}
+        {...register('password')}
+      />
+      <SubmitButton disabled={loginUser.isPending}>로그인</SubmitButton>
+    </form>
+  );
+}
+```
+
+### 3. Mutation Hook 작성
+
+```typescript
+// service/user/mutation/useUserMutation.tsx
+import { useMutation } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
+
+import { loginUserAction } from '../action';
+
+export const useUserMutation = () => {
+  const router = useRouter();
+
+  const loginUser = useMutation({
+    mutationFn: (formData: FormData) => loginUserAction(formData),
+    onSuccess: (response) => {
+      const { success, message } = response;
+
+      if (!success) {
+        alert(message);
+        return;
+      }
+
+      alert('로그인이 완료되었습니다.');
+      router.push('/home');
+    },
+    onError: (error) => {
+      throw error;
+    },
+  });
+
+  return {
+    loginUser,
+  };
+};
+```
+
+### 4. Server Action 작성
+
+```typescript
+// service/user/action/login-user.action.ts
+'use server';
+
+import { createClient } from '@/config/supabase/server';
+
+import { DATABASE_TABLE } from '@/share/const';
+import { ResponseType } from '@/share/type/response.type';
+import { passwordUtil } from '@/share/utils';
+
+export const loginUserAction = async (formData: FormData): Promise<ResponseType> => {
+  const email = formData.get('email') as string;
+  const password = formData.get('password') as string;
+
+  const supabase = await createClient();
+
+  try {
+    const userAccount = await supabase.from(DATABASE_TABLE.USER_ACCOUNT).select('*').eq('email', email).single();
+
+    if (!userAccount.data) {
+      return {
+        success: false,
+        data: null,
+        message: '사용자를 찾을 수 없습니다',
+      };
+    }
+
+    const isValid = await passwordUtil.comparePassword(password, userAccount.data.password);
+
+    if (!isValid) {
+      return {
+        success: false,
+        data: null,
+        message: '비밀번호가 일치하지 않습니다',
+      };
+    }
+
+    return {
+      success: true,
+      data: null,
+      message: null,
+    };
+  } catch (error) {
+    throw error;
+  }
+};
+```
+
+### 5. Export 설정
+
+```typescript
+// service/user/action/index.ts
+export * from './login-user.action';
+
+// service/user/mutation/index.ts
+export * from './useUserMutation';
+
+// service/user/index.ts
+export * from './action';
+export * from './mutation';
+export * from './model';
+```
+
+---
+
 ## 7. 주의사항
 
 - **비동기 처리**: async/await 사용, Promise 체이닝 지양
@@ -434,3 +761,7 @@ export async function protectedAction() {
 - **타입 안정성**: `any` 사용 금지, 명시적 타입 정의 필수
 - **코드 품질**: ESLint 규칙 준수, 불필요한 console.log 제거
 - **Supabase RLS**: Row Level Security 정책 설정 권장
+- **Form 처리**: 모든 폼은 React Hook Form + Zod + Mutation 패턴 사용
+- **Server Action**: 직접 호출하지 않고 Mutation을 통해 호출
+- **ResponseType**: 모든 Server Action은 `ResponseType<T>` 반환
+- **Mutation 상태**: `isPending`으로 로딩 상태 관리

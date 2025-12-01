@@ -1,16 +1,22 @@
 'use client';
 
 import { useFormStatus } from 'react-dom';
+
 import Button from './Button';
 
-interface SubmitButtonProps {
+interface SubmitButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   children?: React.ReactNode;
   variant?: 'primary' | 'secondary' | 'outline' | 'text';
   size?: 'sm' | 'md' | 'lg';
   fullWidth?: boolean;
 }
 
-export default function SubmitButton({ children = '제출', variant = 'primary', size = 'md', fullWidth = false }: SubmitButtonProps) {
+export default function SubmitButton({
+  children = '제출',
+  variant = 'primary',
+  size = 'md',
+  fullWidth = false,
+}: SubmitButtonProps) {
   const { pending } = useFormStatus();
 
   return (
@@ -19,4 +25,3 @@ export default function SubmitButton({ children = '제출', variant = 'primary',
     </Button>
   );
 }
-

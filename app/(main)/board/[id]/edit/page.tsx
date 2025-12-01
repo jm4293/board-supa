@@ -1,34 +1,31 @@
 import { redirect } from 'next/navigation';
 
-import { getSession } from '@/share/utils/auth';
+import { getBoardDetailAction } from '@/service/board/action';
+import { getUserInfoAction } from '@/service/user';
 
-import BoardEditForm from './BoardEditForm';
+import BoardEdit from './BoardEdit';
 
-interface PageProps {
-  params: Promise<{ id: string }> | { id: string };
-}
+export default async function BoardEditPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
 
-export default async function BoardEditPage({ params }: PageProps) {
-  const session = await getSession();
+  const { data: userInfo } = await getUserInfoAction();
+  const { data, success } = await getBoardDetailAction({ id });
 
-  if (!session) {
-    redirect('/auth/login');
+  if (!userInfo) {
+    redirect(`/board/${id}`);
   }
 
-  const resolvedParams = await Promise.resolve(params);
-  const boardId = parseInt(resolvedParams.id);
-
-  if (isNaN(boardId)) {
+  if (!success) {
     redirect('/board');
   }
 
-  // if (!board) {
-  //   redirect('/board');
-  // }
+  if (!data) {
+    redirect('/board');
+  }
 
-  // if (board.userId !== session.userId) {
-  //   redirect(`/board/${boardId}`);
-  // }
+  if (userInfo?.userAccountId !== data?.userAccountId) {
+    redirect(`/board/${id}`);
+  }
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -36,7 +33,7 @@ export default async function BoardEditPage({ params }: PageProps) {
         <h1 className="text-3xl font-bold text-gray-900">게시글 수정</h1>
       </div>
 
-      {/* <BoardEditForm boardId={boardId} initialTitle={board.title} initialContent={board.content} /> */}
+      <BoardEdit data={data} />
     </div>
   );
 }

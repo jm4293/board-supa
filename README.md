@@ -38,19 +38,28 @@ npm run dev
 ## 📁 프로젝트 구조
 
 ```
-app/                    # Next.js App Router (페이지, 레이아웃, Server Actions)
+app/                    # Next.js App Router (페이지, 레이아웃)
   (main)/               # 메인 레이아웃 그룹
     board/              # 게시판 관련 페이지
     home/               # 홈 페이지
-  auth/                 # 인증 관련 페이지
+  (auth)/               # 인증 레이아웃 그룹
+    auth/               # 인증 관련 페이지
 component/              # React 컴포넌트
   common/               # 공통 컴포넌트
 config/                 # 설정 파일
   supabase/            # Supabase 클라이언트 설정
+  react-query/         # React Query Provider 설정
 database/
-  model/            # 데이터베이스 모델 (TypeScript Interface)
+  model/                # 데이터베이스 모델 (TypeScript Interface)
+service/                # 비즈니스 로직 서비스 레이어
+  {domain}/             # 도메인별 폴더 (예: user, board)
+    action/             # Server Actions
+    mutation/           # React Query Mutations
+    model/              # 도메인별 Model (선택사항)
 share/                  # 공유 리소스
-  utils/               # 유틸리티 함수
+  utils/                # 유틸리티 함수
+  const/                # 상수 정의
+  type/                 # 공통 타입 정의
 docs/                   # 문서
 ```
 
@@ -61,6 +70,7 @@ docs/                   # 문서
 - **Database**: Supabase (PostgreSQL)
 - **Styling**: Tailwind CSS
 - **Form**: React Hook Form + Zod
+- **State Management**: React Query (@tanstack/react-query)
 - **Authentication**: Supabase Auth
 
 ## 📚 주요 기능
