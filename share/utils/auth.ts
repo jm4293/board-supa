@@ -34,7 +34,7 @@ export const jwtUtil = {
   /**
    * JWT refresh token 생성
    */
-  generateRefreshToken(id: number, email: string): string { 
+  generateRefreshToken(id: number, email: string): string {
     const payload: JwtPayload = {
       id,
       email,
@@ -85,3 +85,25 @@ export const jwtUtil = {
     }
   },
 };
+
+/**
+ * 세션 정보 가져오기
+ */
+export async function getSession() {
+  const { cookieUtil } = await import('./cookie');
+  const accessToken = await cookieUtil.getAccessToken();
+
+  if (!accessToken) {
+    return null;
+  }
+
+  try {
+    const payload = jwtUtil.verifyToken(accessToken);
+    return {
+      id: payload.id,
+      email: payload.email,
+    };
+  } catch {
+    return null;
+  }
+}

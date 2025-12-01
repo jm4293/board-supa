@@ -1,6 +1,6 @@
 export interface BoardModel {
   id: number;
-  userId: number;
+  userAccountId: number;
   title: string;
   content: string;
   viewCount: number | null;

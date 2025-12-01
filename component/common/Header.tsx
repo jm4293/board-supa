@@ -19,7 +19,7 @@ export default function Header() {
     if (!code) {
       checkAuth();
     }
-  }, []);
+  }, [searchParams]);
 
   const checkAuth = async () => {
     try {
