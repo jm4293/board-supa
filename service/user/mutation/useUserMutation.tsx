@@ -72,7 +72,11 @@ export const useUserMutation = () => {
         alert(message || '카카오 토큰 요청에 실패했습니다.');
         return;
       }
-      router.push(`/home`);
+      return {
+        success: true,
+        message: '카카오 토큰 요청이 완료되었습니다.',
+        data: data,
+      }
     },
     onError: (error) => {
       throw error;

@@ -14,6 +14,9 @@ const formSchema = z.object({
   password: z.string().min(4, '비밀번호는 최소 4자리 이상이어야 합니다'),
 });
 
+const KAKAO_REST_API_KEY = process.env.KAKAO_REST_API_KEY;
+const KAKAO_REDIRECT_URI = process.env.NEXT_PUBLIC_KAKAO_REDIRECT_URI;
+
 export default function AuthLoginForm({ email }: { email: string | undefined }) {
   const {
     getValues,
@@ -102,14 +105,14 @@ export default function AuthLoginForm({ email }: { email: string | undefined }) 
         </div>
 
         <div className="mt-6">
-          <button
-            type="button"
+          <Link
+            href={`https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_REST_API_KEY}&redirect_uri=${KAKAO_REDIRECT_URI}&response_type=code`}
+            variant="primary"
             className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-400 disabled:opacity-50 disabled:cursor-not-allowed"
-            onClick={handleKakaoLogin}
           >
             <Image src="/kakaotalk.png" alt="카카오톡" width={24} height={24} />
             <span className="text-gray-700 font-medium">카카오로 로그인</span>
-          </button>
+          </Link>
         </div>
       </div>
     </Card>

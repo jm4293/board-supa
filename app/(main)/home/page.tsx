@@ -1,11 +1,9 @@
 import Link from 'next/link';
 
-import KakaoCallback from './KakaoCallback';
 
 export default function HomePage() {
   return (
     <>
-      <KakaoCallback />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">Study Board에 오신 것을 환영합니다</h1>
