@@ -1,4 +1,4 @@
-import BoardWriteForm from './BoardWrite';
+import BoardWrite from './BoardWrite';
 
 export default function BoardWritePage() {
   return (
@@ -7,7 +7,7 @@ export default function BoardWritePage() {
         <h1 className="text-3xl font-bold text-gray-900">게시글 작성</h1>
       </div>
 
-      <BoardWriteForm />
+      <BoardWrite />
     </div>
   );
 }

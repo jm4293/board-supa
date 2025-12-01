@@ -43,7 +43,7 @@ export default async function BoardDetailPage({ params }: { params: Promise<{ id
 
         {!!userInfo && userInfo?.userAccountId === data?.userAccountId && (
           <div className="flex space-x-4">
-            <Link href={`/board/write/${id}`}>
+            <Link href={`/board/${id}/edit`}>
               <Button variant="outline" size="sm">
                 수정
               </Button>
