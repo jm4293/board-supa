@@ -4,15 +4,15 @@ import dayjs from 'dayjs';
 
 import { createClient } from '@/config/supabase/server';
 
-export async function uploadImageAction(formData: FormData): Promise<{
-  success: boolean;
-  data: {
+import { ResponseType } from '@/share/type';
+
+export async function uploadImageAction(formData: FormData): Promise<
+  ResponseType<{
     fullPath: string;
     id: string;
     path: string;
-  } | null;
-  message: string | null;
-}> {
+  } | null>
+> {
   const image = formData.get('image') as File;
 
   const supabase = await createClient();

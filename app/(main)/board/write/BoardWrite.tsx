@@ -18,7 +18,7 @@ const formSchema = z.object({
   content: z.string().min(1, '내용은 최소 1자 이상이어야 합니다.'),
 });
 
-export default function BoardWriteForm() {
+export default function BoardWrite() {
   const {
     getValues,
     register,
@@ -65,7 +65,7 @@ export default function BoardWriteForm() {
   };
 
   const onSubmit = () => {
-    createBoard.mutate({ ...getValues(), image: image });
+    createBoard.mutate({ ...getValues(), image });
   };
 
   return (

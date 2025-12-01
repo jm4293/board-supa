@@ -1,4 +1,4 @@
-import BoardWriteForm from './BoardWriteForm';
+import BoardWriteForm from './BoardWrite';
 
 export default function BoardWritePage() {
   return (

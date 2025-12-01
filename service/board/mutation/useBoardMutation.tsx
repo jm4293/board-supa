@@ -3,7 +3,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 
-import { CreateBoardActionParams, createBoardAction, uploadImageAction } from '../action';
+import { CreateBoardActionParams, createBoardAction, deleteBoardAction, uploadImageAction } from '../action';
 
 export const useBoardMutation = () => {
   const router = useRouter();
@@ -32,8 +32,28 @@ export const useBoardMutation = () => {
     },
   });
 
+  const deleteBoard = useMutation({
+    mutationFn: (id: number) => deleteBoardAction({ id }),
+    onSuccess: async (response) => {
+      const { success, message } = response;
+
+      if (!success) {
+        alert(message);
+        return;
+      }
+
+      alert('게시글이 삭제되었습니다.');
+      await queryClient.invalidateQueries({ queryKey: ['boards'] });
+      router.push('/board');
+    },
+    onError: (error) => {
+      throw error;
+    },
+  });
+
   return {
     uploadImage,
     createBoard,
+    deleteBoard,
   };
 };

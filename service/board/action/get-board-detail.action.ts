@@ -3,8 +3,11 @@
 import { createClient } from '@/config/supabase/server';
 
 import { DATABASE_TABLE } from '@/share/const';
+import { ResponseType } from '@/share/type';
 
-export const getBoardDetailAction = async ({ id }: { id: string }) => {
+import { BoardModel } from '../model';
+
+export const getBoardDetailAction = async ({ id }: { id: string }): Promise<ResponseType<BoardModel>> => {
   const supabase = await createClient();
 
   const { data, error } = await supabase
