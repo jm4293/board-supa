@@ -9,31 +9,36 @@ import { cookieUtil } from '@/share/utils/cookie';
 
 import { UserAccountModel, UserModel } from '../model';
 
-const KAKAO_REST_API_KEY = process.env.KAKAO_REST_API_KEY;
-const KAKAO_REDIRECT_URI = process.env.NEXT_PUBLIC_KAKAO_REDIRECT_URI;
-const KAKAO_CLIENT_SECRET = process.env.KAKAO_CLIENT_SECRET;
+// const KAKAO_REST_API_KEY = process.env.KAKAO_REST_API_KEY;
+const KAKAO_REST_API_KEY = process.env.NEXT_PUBLIC_KAKAO_APP_KEY;
 
-export const requestAuthorizationCodeAction = async (): Promise<ResponseType<{ url: string }>> => {
-  try {
-    if (!KAKAO_REST_API_KEY || !KAKAO_REDIRECT_URI) {
-      return {
-        success: false,
-        data: null,
-        message: '카카오 OAuth 설정이 올바르지 않습니다',
-      };
-    }
+// const KAKAO_REDIRECT_URI = process.env.NEXT_PUBLIC_KAKAO_REDIRECT_URI;
+const KAKAO_REDIRECT_URI = process.env.NEXT_PUBLIC_KAKAO_REDIRECT_URL;
 
-    const kakaoAuthUrl = `https://kauth.kakao.com/oauth/authorize?response_type=code&client_id=${KAKAO_REST_API_KEY}&redirect_uri=${KAKAO_REDIRECT_URI}`;
+// const KAKAO_CLIENT_SECRET = process.env.KAKAO_CLIENT_SECRET;
+const KAKAO_CLIENT_SECRET = process.env.NEXT_PUBLIC_KAKAO_CLIENT_SECRET;
 
-    return {
-      success: true,
-      data: { url: kakaoAuthUrl },
-      message: null,
-    };
-  } catch (error) {
-    throw error;
-  }
-};
+// export const requestAuthorizationCodeAction = async (): Promise<ResponseType<{ url: string }>> => {
+//   try {
+//     if (!KAKAO_REST_API_KEY || !KAKAO_REDIRECT_URI) {
+//       return {
+//         success: false,
+//         data: null,
+//         message: '카카오 OAuth 설정이 올바르지 않습니다',
+//       };
+//     }
+
+//     const kakaoAuthUrl = `https://kauth.kakao.com/oauth/authorize?response_type=code&client_id=${KAKAO_REST_API_KEY}&redirect_uri=${KAKAO_REDIRECT_URI}`;
+
+//     return {
+//       success: true,
+//       data: { url: kakaoAuthUrl },
+//       message: null,
+//     };
+//   } catch (error) {
+//     throw error;
+//   }
+// };
 
 export const requestKakaoTokenAction = async (code: string): Promise<ResponseType> => {
   try {
