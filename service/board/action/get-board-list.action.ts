@@ -33,14 +33,14 @@ export const getBoardListAction = async (
     const { count } = await supabase
       .from(DATABASE_TABLE.BOARD)
       .select('*', { count: 'exact', head: true })
-      .eq('is_deleted', 0);
+
 
     // 게시글 목록 조회
     const { data, error } = await supabase
       .from(DATABASE_TABLE.BOARD)
       .select('*')
-      .eq('is_deleted', 0)
-      .order('created_at', { ascending: false })
+
+      .order('createdAt', { ascending: false })
       .range(offset, offset + limit - 1);
 
     if (error) {
