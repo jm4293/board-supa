@@ -8,6 +8,8 @@ interface JwtPayload {
 const ACCESS_TOKEN_EXPIRES_IN = '10m';
 const REFRESH_TOKEN_EXPIRES_IN = '1d';
 
+const JWT_SECRET = process.env.NEXT_PUBLIC_JWT_SECRET;
+
 export const jwtUtil = {
   /**
    * JWT access token 생성
@@ -18,7 +20,7 @@ export const jwtUtil = {
       email,
     };
 
-    const secret = process.env.JWT_SECRET;
+    const secret = JWT_SECRET;
     if (!secret) {
       throw new Error('JWT_SECRET is not defined');
     }
@@ -40,9 +42,9 @@ export const jwtUtil = {
       email,
     };
 
-    const secret = process.env.JWT_SECRET;
+    const secret = JWT_SECRET;
     if (!secret) {
-      throw new Error('JWT_SECRET is not defined');
+      throw new Error('JWT_SECRET is not definedddddd');
     }
 
     const expiresIn = REFRESH_TOKEN_EXPIRES_IN as SignOptions['expiresIn'];
@@ -53,11 +55,11 @@ export const jwtUtil = {
     return jwt.sign(payload, secret, options);
   },
 
-  /**
+  /** 
    * JWT 토큰 검증
    */
   verifyToken(token: string): JwtPayload {
-    const secret = process.env.JWT_SECRET;
+    const secret = JWT_SECRET;
     if (!secret) {
       throw new Error('JWT_SECRET is not defined');
     }
