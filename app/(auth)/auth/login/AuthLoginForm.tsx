@@ -14,7 +14,7 @@ const formSchema = z.object({
   password: z.string().min(4, '비밀번호는 최소 4자리 이상이어야 합니다'),
 });
 
-const KAKAO_REST_API_KEY = process.env.KAKAO_REST_API_KEY;
+const KAKAO_REST_API_KEY = process.env.NEXT_PUBLIC_KAKAO_REST_API_KEY;
 const KAKAO_REDIRECT_URI = process.env.NEXT_PUBLIC_KAKAO_REDIRECT_URI;
 
 export default function AuthLoginForm({ email }: { email: string | undefined }) {

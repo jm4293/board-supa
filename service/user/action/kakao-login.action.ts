@@ -9,9 +9,9 @@ import { cookieUtil } from '@/share/utils/cookie';
 
 import { UserAccountModel, UserModel } from '../model';
 
-const KAKAO_REST_API_KEY = process.env.KAKAO_REST_API_KEY;
+const KAKAO_REST_API_KEY = process.env.NEXT_PUBLIC_KAKAO_REST_API_KEY;
 const KAKAO_REDIRECT_URI = process.env.NEXT_PUBLIC_KAKAO_REDIRECT_URI;
-const KAKAO_CLIENT_SECRET = process.env.KAKAO_CLIENT_SECRET;
+const KAKAO_CLIENT_SECRET = process.env.NEXT_PUBLIC_KAKAO_CLIENT_SECRET;
 
 export const requestAuthorizationCodeAction = async (): Promise<ResponseType<{ url: string }>> => {
   try {
