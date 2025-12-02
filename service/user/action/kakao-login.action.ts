@@ -23,11 +23,24 @@ export const requestAuthorizationCodeAction = async (): Promise<ResponseType<{ u
       };
     }
 
+    // 카카오 로그인 URL 요청
     const kakaoAuthUrl = `https://kauth.kakao.com/oauth/authorize?response_type=code&client_id=${KAKAO_REST_API_KEY}&redirect_uri=${KAKAO_REDIRECT_URI}`;
+    const authorizationCode = await fetch(kakaoAuthUrl, { method: 'GET' });
+
+    if (!authorizationCode.ok) {
+      return {
+        success: false,
+        data: null,
+        message: '카카오 로그인 URL 요청에 실패했습니다',
+      };
+    }
+
+    const authorizationCodeData = await authorizationCode.json();
+    const { code } = authorizationCodeData;
 
     return {
       success: true,
-      data: { url: kakaoAuthUrl },
+      data: code,
       message: null,
     };
   } catch (error) {
@@ -47,8 +60,18 @@ export const requestKakaoTokenAction = async (code: string): Promise<ResponseTyp
 
     // 1. 카카오 토큰 요청
     const tokenResponse = await fetch(
-      `https://kauth.kakao.com/oauth/token?grant_type=authorization_code&client_id=${KAKAO_REST_API_KEY}&redirect_uri=${KAKAO_REDIRECT_URI}&code=${code}&client_secret=${KAKAO_CLIENT_SECRET}`,
-      { method: 'POST' },
+      `https://kauth.kakao.com/oauth/token`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
+        },
+        body: new URLSearchParams({
+          grant_type: 'authorization_code',
+          client_id: KAKAO_REST_API_KEY,
+          redirect_uri: KAKAO_REDIRECT_URI,
+          code: code,
+        }),
+      },
     );
 
     if (!tokenResponse.ok) {
@@ -82,15 +105,15 @@ export const requestKakaoTokenAction = async (code: string): Promise<ResponseTyp
     const { kakao_account } = userResponseData;
     const { email, profile } = kakao_account;
     const { nickname, profile_image_url } = profile;
-
+    
     const supabase = await createClient();
 
-    // 3. 데이터베이스에서 사용자 계정 확인
+    // 3. 데이터베이스에서 사용자 계정 확인 (닉네임)
     const userAccountResponse = await supabase
-      .from(DATABASE_TABLE.USER_ACCOUNT)
+      .from(DATABASE_TABLE.USER)
       .select('*')
-      .eq('email', email)
-      .single<UserAccountModel>();
+      .eq('nickname', nickname)
+      .single<UserModel>();
 
     // 4. 사용자 정보가 없으면 회원가입 후 로그인
     if (!userAccountResponse.data) {
@@ -152,7 +175,7 @@ export const requestKakaoTokenAction = async (code: string): Promise<ResponseTyp
     const userResponse_db = await supabase
       .from(DATABASE_TABLE.USER)
       .select('*')
-      .eq('id', userAccountResponse.data.userId)
+      .eq('id', userAccountResponse.data.id)
       .single<UserModel>();
 
     if (!userResponse_db.data) {

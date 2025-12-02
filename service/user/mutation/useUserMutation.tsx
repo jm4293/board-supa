@@ -1,7 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 
-import { LoginUserActionParams, RegisterUserActionParams, loginUserAction, registerUserAction, requestAuthorizationCodeAction, requestKakaoTokenAction } from '../action';
+import { LoginUserActionParams, RegisterUserActionParams, loginUserAction, registerUserAction, requestKakaoTokenAction } from '../action';
 
 export const useUserMutation = () => {
   const router = useRouter();
@@ -42,51 +42,29 @@ export const useUserMutation = () => {
       throw error;
     },
   });
-
-  const requestAuthorizationCode = useMutation({
-    mutationFn: () => requestAuthorizationCodeAction(),
-    onSuccess: (response) => {
-      const { success, message, data } = response;
-
-      if (!success) {
-        alert(message || '카카오 로그인에 실패했습니다.');
-        return;
-      }
-
-      if (data?.url) {
-        window.location.href = data.url;
-      }
-    },
-    onError: (error) => {
-      alert('카카오 로그인에 실패했습니다.');
-      throw error;
-    },
-  });
-
+  /* eslint-disable no-console */
   const requestKakaoToken = useMutation({
     mutationFn: (code: string) => requestKakaoTokenAction(code),
     onSuccess: (response) => {
-      const { success, message, data } = response;
+      const { success, message } = response;
 
       if (!success) {
         alert(message || '카카오 토큰 요청에 실패했습니다.');
         return;
       }
-      return {
-        success: true,
-        message: '카카오 토큰 요청이 완료되었습니다.',
-        data: data,
-      }
+
+      alert('카카오 로그인이 완료되었습니다.');
+      router.push('/home');
     },
     onError: (error) => {
-      throw error;
+      console.error('카카오 토큰 요청 에러:', error);
+      alert('카카오 로그인 중 오류가 발생했습니다.');
     },
   });
 
   return {
     loginUser,
     registerUser,
-    requestAuthorizationCode,
     requestKakaoToken,
   };
 
