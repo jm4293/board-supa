@@ -48,7 +48,7 @@ export const createBoardAction = async (formData: FormData): Promise<ResponseTyp
     const userAccountResponse = await supabase
       .from(DATABASE_TABLE.USER_ACCOUNT)
       .select('id')
-      .eq('email', session.email)
+      .eq('userId', session.id)
       .single();
 
     if (!userAccountResponse.data) {
@@ -63,11 +63,11 @@ export const createBoardAction = async (formData: FormData): Promise<ResponseTyp
     const boardResponse = await supabase
       .from(DATABASE_TABLE.BOARD)
       .insert({
-        user_account_id: userAccountResponse.data.id,
+        userAccountId: userAccountResponse.data.id,
         title: title.trim(),
         content: content.trim(),
-        view_count: 0,
-        is_deleted: 0,
+        viewCount: 0,
+        isDeleted: 0,
       })
       .select('*')
       .single<BoardModel>();
