@@ -2,7 +2,7 @@
 
 import { redirect } from 'next/navigation';
 
-import { getSession } from '@/share/utils/auth';
+import { authUtil } from '@/share/utils';
 
 export async function deleteBoard(formData: FormData) {
   const boardId = parseInt(formData.get('boardId') as string);
@@ -11,7 +11,7 @@ export async function deleteBoard(formData: FormData) {
     throw new Error('유효하지 않은 게시글 ID입니다');
   }
 
-  const session = await getSession();
+  const session = await authUtil.getSession();
 
   if (!session) {
     redirect('/auth/login');

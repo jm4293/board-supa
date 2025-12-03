@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import Link from 'next/link';
 
 import { Button, Card } from '@/component/common';
@@ -7,36 +8,64 @@ import { Button, Card } from '@/component/common';
 import { formatDate } from '@/share/utils/format';
 
 import { deleteBoard } from './actions';
+import { useBoardMutation } from '@/service/board/mutation';
 
 interface Board {
   id: number;
+  userAccountId: number;
   title: string;
   content: string;
   viewCount: number;
-  likeCount: number;
-  commentCount: number;
+  isDeleted: number;
+  deletedAt: string;
   createdAt: string;
   updatedAt: string;
-  user: {
-    id: number;
-    username: string;
-  };
 }
 
 interface BoardDetailProps {
-  board: Board;
-  boardId: string;
+  boardId: number;
   currentUserId: number | null;
 }
 
-export default function BoardDetail({ board, boardId, currentUserId }: BoardDetailProps) {
+export default function BoardDetail({ boardId, currentUserId }: BoardDetailProps) {
+  const { getBoardDetail } = useBoardMutation();
+
+  useEffect(() => {
+    getBoardDetail.mutate(boardId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [boardId]);
+
+  const boardResponse = getBoardDetail.data;
+  const board = boardResponse?.success ? (boardResponse.data as unknown as Board) : null;
+
+
+  if (getBoardDetail.isPending) {
+    return (
+      <Card shadow="lg" className="mb-8">
+        <div className="p-6">
+          <div className="text-center">로딩 중...</div>
+        </div>
+      </Card>
+    );
+  }
+
+  if (!board) {
+    return (
+      <Card shadow="lg" className="mb-8">
+        <div className="p-6">
+          <div className="text-center text-red-600">게시글을 불러올 수 없습니다.</div>
+        </div>
+      </Card>
+    );
+  }
+
   return (
     <Card shadow="lg" className="mb-8">
       <div className="p-6">
         <div className="flex justify-between items-start mb-4">
           <h1 className="text-3xl font-bold text-gray-900">{board.title}</h1>
           <div className="flex items-center space-x-2">
-            {currentUserId === board.user.id && (
+            {currentUserId === board.userAccountId && (
               <>
                 <Link href={`/board/${boardId}/edit`}>
                   <Button variant="secondary" size="sm">
@@ -60,22 +89,6 @@ export default function BoardDetail({ board, boardId, currentUserId }: BoardDeta
         </div>
 
         <div className="flex items-center space-x-4 text-sm text-gray-600 mb-6 pb-6 border-b">
-          <span className="flex items-center">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-4 w-4 mr-1"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-              />
-            </svg>
-            {board.user.username}
-          </span>
           <span>{formatDate(board.createdAt)}</span>
           <span className="flex items-center">
             <svg
@@ -110,26 +123,10 @@ export default function BoardDetail({ board, boardId, currentUserId }: BoardDeta
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth={2}
-                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-              />
-            </svg>
-            좋아요 {board.likeCount}
-          </span>
-          <span className="flex items-center">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-4 w-4 mr-1"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
                 d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
               />
             </svg>
-            댓글 {board.commentCount}
+            댓글 {board.viewCount}
           </span>
         </div>
 
