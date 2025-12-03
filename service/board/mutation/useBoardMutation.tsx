@@ -1,13 +1,13 @@
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { createBoardAction, GetBoardListActionParams, getBoardListAction, deleteBoardAction, getBoardDetailAction } from "../action";
+import { createBoardAction, GetBoardListActionParams, getBoardListAction, deleteBoardAction, getBoardDetailAction, uploadImageAction } from "../action";
 
 
 export const useBoardMutation = () => {
     const router = useRouter();
 
     const createBoard = useMutation({
-        mutationFn: (formData: FormData) => createBoardAction(formData),
+        mutationFn: (params: { title: string; content: string; image?: string | null }) => createBoardAction(params),
         onSuccess: (response) => {
             const { success, message, data } = response;
             if (!success) {
@@ -62,11 +62,18 @@ export const useBoardMutation = () => {
         },
     });
 
+    const uploadImage = useMutation({
+        mutationFn: (formData: FormData) => uploadImageAction(formData),
+        onError: (error) => {
+            throw error;
+        },
+    });
 
     return {
         createBoard,
         getBoardList,
         getBoardDetail,
         deleteBoard,
+        uploadImage,
     }
 }

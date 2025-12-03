@@ -12,12 +12,12 @@ import { BoardModel } from '../model';
 export interface CreateBoardActionParams {
   title: string;
   content: string;
+  image?: string | null;
 }
 
-export const createBoardAction = async (formData: FormData): Promise<ResponseType<{ id: number }>> => {
+export const createBoardAction = async (params: CreateBoardActionParams): Promise<ResponseType<{ id: number }>> => {
   try {
-    const title = formData.get('title') as string;
-    const content = formData.get('content') as string;
+    const { title, content, image } = params;
 
     if (!title || !title.trim()) {
       return {
@@ -74,6 +74,21 @@ export const createBoardAction = async (formData: FormData): Promise<ResponseTyp
         data: null,
         message: '게시글 작성에 실패했습니다',
       };
+    }
+
+    // 이미지가 있으면 BoardImage 테이블에 저장
+    if (image) {
+      // image는 이미 전체 URL이므로 그대로 사용
+      const imageName = image.split('/').pop() || null;
+
+      await supabase.from(DATABASE_TABLE.BOARD_IMAGE).insert({
+        boardId: boardResponse.data.id,
+        imageUrl: image,
+        imageName,
+        imageSize: null,
+        mimeType: null,
+        orderNum: 1,
+      });
     }
 
     return {
