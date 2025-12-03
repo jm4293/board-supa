@@ -1,8 +1,9 @@
 import { SignOptions } from 'jsonwebtoken';
-import { jwtUtil } from './jwt';
-import { cookieUtil } from './cookie';
 
-interface JwtPayload {
+import { cookieUtil } from './cookie';
+import { jwtUtil } from './jwt';
+
+export interface JwtPayload {
   userAccountId: number;
   email: string;
   nickname: string;
@@ -28,4 +29,3 @@ export const authUtil = {
     await cookieUtil.clearAllTokens();
   },
 };
-

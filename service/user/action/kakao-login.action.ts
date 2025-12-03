@@ -191,7 +191,7 @@ export const requestKakaoTokenAction = async (code: string): Promise<ResponseTyp
 
 
     await authUtil.setSession({
-      userAccountId: userResponse_db.data.id,
+      userAccountId: userAccountResponse.data.id,
       email: userAccountResponse.data.email ?? '',
       nickname: userResponse_db.data.nickname ?? '',
       provider: userAccountResponse.data.provider,
