@@ -24,7 +24,7 @@ export const getBoardDetailAction = async (boardId: number): Promise<ResponseTyp
       .from(DATABASE_TABLE.BOARD)
       .select('*')
       .eq('id', boardId)
-      .eq('is_deleted', 0)
+      .eq('isDeleted', 0)
       .single<BoardModel>();
 
     if (error || !data) {

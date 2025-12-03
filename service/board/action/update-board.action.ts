@@ -6,7 +6,7 @@ import { createClient } from '@/config/supabase/server';
 
 import { DATABASE_TABLE } from '@/share/const';
 import { ResponseType } from '@/share/type/response.type';
-import { getSession } from '@/share/utils/auth';
+import { authUtil } from '@/share/utils';
 
 import { BoardModel } from '../model';
 
@@ -16,14 +16,8 @@ export interface UpdateBoardActionParams {
   content: string;
 }
 
-export const updateBoardAction = async (boardId: number, formData: FormData): Promise<ResponseType<BoardModel>> => {
+export const updateBoardAction = async (boardId: number, formData: FormData) => {
   try {
-    const session = await getSession();
-
-    if (!session) {
-      redirect('/auth/login');
-    }
-
     if (!boardId || isNaN(boardId)) {
       return {
         success: false,
@@ -70,7 +64,7 @@ export const updateBoardAction = async (boardId: number, formData: FormData): Pr
     }
 
     // UserAccount 조회
-    const userAccountResponse = await supabase
+    /*     const userAccountResponse = await supabase
       .from(DATABASE_TABLE.USER_ACCOUNT)
       .select('id')
       .eq('email', session.email)
@@ -113,7 +107,7 @@ export const updateBoardAction = async (boardId: number, formData: FormData): Pr
       };
     }
 
-    redirect(`/board/${boardId}`);
+    redirect(`/board/${boardId}`); */
   } catch (error) {
     // redirect()는 NEXT_REDIRECT 에러를 throw하는데, 이것은 정상 동작이므로 다시 throw
     if (

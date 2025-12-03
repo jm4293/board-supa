@@ -1,12 +1,11 @@
 'use server';
 
-import { redirect } from 'next/navigation';
-
 import { createClient } from '@/config/supabase/server';
 
 import { DATABASE_TABLE } from '@/share/const';
 import { ResponseType } from '@/share/type/response.type';
-import { getSession } from '@/share/utils/auth';
+import { JwtPayload, authUtil } from '@/share/utils';
+import { jwtUtil } from '@/share/utils/jwt';
 
 import { BoardModel } from '../model';
 
@@ -15,14 +14,8 @@ export interface CreateBoardActionParams {
   content: string;
 }
 
-export const createBoardAction = async (formData: FormData): Promise<ResponseType<BoardModel>> => {
+export const createBoardAction = async (formData: FormData): Promise<ResponseType<{ id: number }>> => {
   try {
-    const session = await getSession();
-
-    if (!session) {
-      redirect('/auth/login');
-    }
-
     const title = formData.get('title') as string;
     const content = formData.get('content') as string;
 
@@ -44,18 +37,21 @@ export const createBoardAction = async (formData: FormData): Promise<ResponseTyp
 
     const supabase = await createClient();
 
-    // UserAccount 조회
-    const userAccountResponse = await supabase
-      .from(DATABASE_TABLE.USER_ACCOUNT)
-      .select('id')
-      .eq('userId', session.id)
-      .single();
-
-    if (!userAccountResponse.data) {
+    const session = await authUtil.getSession();
+    if (!session) {
       return {
         success: false,
         data: null,
-        message: '사용자 정보를 찾을 수 없습니다',
+        message: '로그인이 필요합니다',
+      };
+    }
+
+    const decoded = jwtUtil.decode(session) as JwtPayload | null;
+    if (!decoded || !decoded.userAccountId) {
+      return {
+        success: false,
+        data: null,
+        message: '유효하지 않은 세션입니다',
       };
     }
 
@@ -63,7 +59,7 @@ export const createBoardAction = async (formData: FormData): Promise<ResponseTyp
     const boardResponse = await supabase
       .from(DATABASE_TABLE.BOARD)
       .insert({
-        userAccountId: userAccountResponse.data.id,
+        userAccountId: decoded.userAccountId,
         title: title.trim(),
         content: content.trim(),
         viewCount: 0,
@@ -80,19 +76,12 @@ export const createBoardAction = async (formData: FormData): Promise<ResponseTyp
       };
     }
 
-    redirect(`/board/${boardResponse.data.id}`);
+    return {
+      success: true,
+      data: { id: boardResponse.data.id },
+      message: null,
+    };
   } catch (error) {
-    // redirect()는 NEXT_REDIRECT 에러를 throw하는데, 이것은 정상 동작이므로 다시 throw
-    if (
-      error &&
-      typeof error === 'object' &&
-      'digest' in error &&
-      typeof error.digest === 'string' &&
-      error.digest.startsWith('NEXT_REDIRECT')
-    ) {
-      throw error;
-    }
-
     return {
       success: false,
       data: null,

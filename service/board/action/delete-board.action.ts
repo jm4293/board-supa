@@ -6,16 +6,10 @@ import { createClient } from '@/config/supabase/server';
 
 import { DATABASE_TABLE } from '@/share/const';
 import { ResponseType } from '@/share/type/response.type';
-import { getSession } from '@/share/utils/auth';
+import { authUtil } from '@/share/utils';
 
 export const deleteBoardAction = async (boardId: number): Promise<ResponseType> => {
   try {
-    const session = await getSession();
-
-    if (!session) {
-      redirect('/auth/login');
-    }
-
     if (!boardId || isNaN(boardId)) {
       return {
         success: false,
@@ -42,7 +36,7 @@ export const deleteBoardAction = async (boardId: number): Promise<ResponseType> 
       };
     }
 
-    // UserAccount 조회
+    /*     // UserAccount 조회
     const userAccountResponse = await supabase
       .from(DATABASE_TABLE.USER_ACCOUNT)
       .select('id')
@@ -80,7 +74,7 @@ export const deleteBoardAction = async (boardId: number): Promise<ResponseType> 
         data: null,
         message: '게시글 삭제에 실패했습니다',
       };
-    }
+    } */
 
     redirect('/board');
   } catch (error) {
