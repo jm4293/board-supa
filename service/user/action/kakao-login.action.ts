@@ -4,8 +4,8 @@ import { createClient } from '@/config/supabase/server';
 
 import { DATABASE_TABLE } from '@/share/const';
 import { ResponseType } from '@/share/type/response.type';
-import { jwtUtil } from '@/share/utils/auth';
-import { cookieUtil } from '@/share/utils/cookie';
+import { authUtil } from '@/share/utils/auth';
+import { jwtUtil } from '@/share/utils/jwt';
 
 import { UserAccountModel, UserModel } from '../model';
 
@@ -112,8 +112,8 @@ export const requestKakaoTokenAction = async (code: string): Promise<ResponseTyp
     const userAccountResponse = await supabase
       .from(DATABASE_TABLE.USER)
       .select('*')
-      .eq('nickname', nickname)
-      .single<UserModel>();
+      .eq('email', email)
+      .single<UserAccountModel>();
 
     // 4. 사용자 정보가 없으면 회원가입 후 로그인
     if (!userAccountResponse.data) {
@@ -158,11 +158,25 @@ export const requestKakaoTokenAction = async (code: string): Promise<ResponseTyp
       }
 
       // JWT 토큰 생성 및 쿠키 저장
-      const accessToken = jwtUtil.generateAccessToken(newUserResponse.data.id, email);
-      const refreshToken = jwtUtil.generateRefreshToken(newUserResponse.data.id, email);
+      const accessToken = jwtUtil.sign({
+        userAccountId: newUserAccountResponse.data.id,
+        email: newUserAccountResponse.data.email ?? '',
+        nickname: newUserResponse.data.nickname ?? '',
+        provider: newUserAccountResponse.data.provider,
+      });
 
-      await cookieUtil.setAccessToken(accessToken);
-      await cookieUtil.setRefreshToken(refreshToken);
+      await authUtil.setSession({
+        userAccountId: newUserAccountResponse.data.id,
+        email: newUserAccountResponse.data.email ?? '',
+        nickname: newUserResponse.data.nickname ?? '',
+        provider: newUserAccountResponse.data.provider,
+      });
+      await authUtil.setSession({
+        userAccountId: newUserAccountResponse.data.id,
+        email: newUserAccountResponse.data.email ?? '',
+        nickname: newUserResponse.data.nickname ?? '',
+        provider: newUserAccountResponse.data.provider,
+      });
 
       return {
         success: true,
@@ -186,12 +200,13 @@ export const requestKakaoTokenAction = async (code: string): Promise<ResponseTyp
       };
     }
 
-    // JWT 토큰 생성 및 쿠키 저장
-    const accessToken = jwtUtil.generateAccessToken(userResponse_db.data.id, email);
-    const refreshToken = jwtUtil.generateRefreshToken(userResponse_db.data.id, email);
 
-    await cookieUtil.setAccessToken(accessToken);
-    await cookieUtil.setRefreshToken(refreshToken);
+    await authUtil.setSession({
+      userAccountId: userResponse_db.data.id,
+      email: userAccountResponse.data.email ?? '',
+      nickname: userResponse_db.data.nickname ?? '',
+      provider: userAccountResponse.data.provider,
+    });
 
     return {
       success: true,

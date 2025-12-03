@@ -4,9 +4,8 @@ import { createClient } from '@/config/supabase/server';
 
 import { DATABASE_TABLE } from '@/share/const';
 import { ResponseType } from '@/share/type/response.type';
-import { passwordUtil } from '@/share/utils';
-import { jwtUtil } from '@/share/utils/auth';
-import { cookieUtil } from '@/share/utils/cookie';
+import { authUtil, passwordUtil } from '@/share/utils';
+import { UserAccountModel, UserModel } from '../model';
 
 export interface LoginUserActionParams {
   email: string;
@@ -19,13 +18,17 @@ export const loginUserAction = async (params: LoginUserActionParams): Promise<Re
   const supabase = await createClient();
 
   try {
-    const userAccount = await supabase.from(DATABASE_TABLE.USER_ACCOUNT).select('*').eq('email', email).single();
+    const userAccount = await supabase
+      .from(DATABASE_TABLE.USER_ACCOUNT)
+      .select('*')
+      .eq('email', email)
+      .single<UserAccountModel>();
 
     if (!userAccount.data) {
-      throw new Error('User not found');
+      throw new Error('이메일을 찾을 수 없습니다');
     }
 
-    const isValid = await passwordUtil.comparePassword(password, userAccount.data.password);
+    const isValid = await passwordUtil.comparePassword(password, userAccount.data.password ?? '');
 
     if (!isValid) {
       return {
@@ -35,23 +38,27 @@ export const loginUserAction = async (params: LoginUserActionParams): Promise<Re
       };
     }
 
-    const user = await supabase.from(DATABASE_TABLE.USER).select('*').eq('id', userAccount.data.userId).single();
+    const user = await supabase
+      .from(DATABASE_TABLE.USER)
+      .select('*')
+      .eq('id', userAccount.data.userId)
+      .single<UserModel>();
 
     if (!user.data) {
-      throw new Error('User not found');
+      throw new Error('사용자를 찾을 수 없습니다');
     }
 
-    // JWT 토큰 생성
-    const accessToken = jwtUtil.generateAccessToken(user.data.id, user.data.email);
-    const refreshToken = jwtUtil.generateRefreshToken(user.data.id, user.data.email);
-
-    // 쿠키에 토큰 저장
-    await cookieUtil.setAccessToken(accessToken);
-    await cookieUtil.setRefreshToken(refreshToken);
+    // 사용자 계정이 있다면, JWT 세션 생성
+    const sessionToken = await authUtil.setSession({
+      userAccountId: userAccount.data.id,
+      email: userAccount.data.email ?? '',
+      nickname: user.data.nickname ?? '',
+      provider: userAccount.data.provider,
+    });
 
     return {
       success: true,
-      data: null,
+      data: sessionToken ?? null,
       message: null,
     };
   } catch (error) {
