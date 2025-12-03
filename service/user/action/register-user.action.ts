@@ -23,6 +23,21 @@ export const registerUserAction = async (
   const supabase = await createClient();
 
   try {
+    // USER_ACCOUNT 테이블에 해당하는 계정 있는지 확인
+    const userAccountResponse = await supabase
+      .from(DATABASE_TABLE.USER_ACCOUNT)
+      .select('*')
+      .eq('email', email)
+      .single();
+
+    if (userAccountResponse.data) {
+      return {
+        success: false,
+        data: null,
+        message: '이미 존재하는 이메일입니다',
+      };
+    }
+
     const newUser = await supabase
       .from(DATABASE_TABLE.USER)
       .insert<Pick<UserModel, 'username' | 'nickname' | 'profileImage' | 'status'>>({
