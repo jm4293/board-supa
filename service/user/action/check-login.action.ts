@@ -1,8 +1,11 @@
 'use server';
+import { JwtPayload } from 'jsonwebtoken';
+
 import { ResponseType } from '@/share/type/response.type';
 import { cookieUtil } from '@/share/utils/cookie';
+import { jwtUtil } from '@/share/utils/jwt';
 
-export const checkLoginAction = async (): Promise<ResponseType> => {
+export const checkLoginAction = async (): Promise<ResponseType<JwtPayload | string>> => {
   try {
     /* 쿠키 조회 */
     const sessionToken = await cookieUtil.getSessionToken();
@@ -26,9 +29,11 @@ export const checkLoginAction = async (): Promise<ResponseType> => {
       };
     }
 
+    const userInfo = await jwtUtil.decode(sessionToken);
+
     return {
       success: true,
-      data: null,
+      data: userInfo,
       message: null,
     };
   } catch (error) {

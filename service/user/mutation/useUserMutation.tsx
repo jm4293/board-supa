@@ -65,16 +65,15 @@ export const useUserMutation = () => {
   const checkLogin = useMutation({
     mutationFn: () => checkLoginAction(),
     onSuccess: (response) => {
-      const { success, message } = response;
-      console.log('checkLogin response:', success, message);
+      const { success, message, data } = response;
 
       if (!success) {
         alert(message);
         return;
       }
+      return data;
     },
     onError: (error) => {
-      console.error('checkLogin error:', error);
       throw error;
     },
   });
