@@ -108,10 +108,12 @@ export const requestKakaoTokenAction = async (code: string): Promise<ResponseTyp
     
     const supabase = await createClient();
 
-    // 3. 데이터베이스에서 사용자 계정 확인 (닉네임)
+    // 3. 데이터베이스에서 사용자 계정 확인
+    // provider가 2(카카오)인 계정들 중에서 일치하는 이메일이 있는지 확인
     const userAccountResponse = await supabase
-      .from(DATABASE_TABLE.USER)
+      .from(DATABASE_TABLE.USER_ACCOUNT)
       .select('*')
+      .eq('provider', 2)
       .eq('email', email)
       .single<UserAccountModel>();
 
@@ -158,19 +160,6 @@ export const requestKakaoTokenAction = async (code: string): Promise<ResponseTyp
       }
 
       // JWT 토큰 생성 및 쿠키 저장
-      const accessToken = jwtUtil.sign({
-        userAccountId: newUserAccountResponse.data.id,
-        email: newUserAccountResponse.data.email ?? '',
-        nickname: newUserResponse.data.nickname ?? '',
-        provider: newUserAccountResponse.data.provider,
-      });
-
-      await authUtil.setSession({
-        userAccountId: newUserAccountResponse.data.id,
-        email: newUserAccountResponse.data.email ?? '',
-        nickname: newUserResponse.data.nickname ?? '',
-        provider: newUserAccountResponse.data.provider,
-      });
       await authUtil.setSession({
         userAccountId: newUserAccountResponse.data.id,
         email: newUserAccountResponse.data.email ?? '',
@@ -182,14 +171,14 @@ export const requestKakaoTokenAction = async (code: string): Promise<ResponseTyp
         success: true,
         data: null,
         message: null,
-      };
+      };  
     }
 
     // 5. 이미 있던 사용자면 로그인만
     const userResponse_db = await supabase
       .from(DATABASE_TABLE.USER)
       .select('*')
-      .eq('id', userAccountResponse.data.id)
+      .eq('id', userAccountResponse.data.userId)
       .single<UserModel>();
 
     if (!userResponse_db.data) {

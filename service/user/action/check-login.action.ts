@@ -16,7 +16,7 @@ export const checkLoginAction = async (): Promise<ResponseType> => {
     }
 
     /* 쿠키 유효성 검사 */
-    const isValid = await cookieUtil.validateAccessToken();
+    const isValid = await cookieUtil.validateSessionToken();
 
     if (!isValid) {
       return {
