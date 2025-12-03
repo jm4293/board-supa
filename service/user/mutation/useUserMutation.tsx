@@ -1,7 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 
-import { LoginUserActionParams, RegisterUserActionParams, loginUserAction, registerUserAction, requestKakaoTokenAction } from '../action';
+import { LoginUserActionParams, RegisterUserActionParams, checkLoginAction, loginUserAction, logoutUserAction, registerUserAction, requestKakaoTokenAction } from '../action';
 
 export const useUserMutation = () => {
   const router = useRouter();
@@ -62,10 +62,46 @@ export const useUserMutation = () => {
     },
   });
 
+  const checkLogin = useMutation({
+    mutationFn: () => checkLoginAction(),
+    onSuccess: (response) => {
+      const { success, message } = response;
+      console.log('checkLogin response:', success, message);
+
+      if (!success) {
+        alert(message);
+        return;
+      }
+    },
+    onError: (error) => {
+      console.error('checkLogin error:', error);
+      throw error;
+    },
+  });
+
+  const logoutUser = useMutation({
+    mutationFn: () => logoutUserAction(),
+    onSuccess: (response) => {
+      const { success, message } = response;
+
+      if (!success) {
+        alert(message);
+        return;
+      }
+
+      alert('로그아웃이 완료되었습니다.');
+      router.refresh();
+    },
+    onError: (error) => {
+      throw error;
+    },
+  });
   return {
     loginUser,
     registerUser,
     requestKakaoToken,
+    checkLogin,
+    logoutUser,
   };
 
 };
