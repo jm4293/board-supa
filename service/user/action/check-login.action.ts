@@ -5,9 +5,9 @@ import { cookieUtil } from '@/share/utils/cookie';
 export const checkLoginAction = async (): Promise<ResponseType> => {
   try {
     /* 쿠키 조회 */
-    const isCookieExists = await cookieUtil.isCookieExists();
+    const sessionToken = await cookieUtil.getSessionToken();
 
-    if (!isCookieExists) {
+    if (!sessionToken) {
       return {
         success: false,
         data: null,

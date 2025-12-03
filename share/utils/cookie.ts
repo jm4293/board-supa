@@ -23,10 +23,6 @@ export const cookieUtil = {
   /**
    * 쿠키 조회
    */
-  isCookieExists: async (): Promise<boolean> => {
-    const cookieStore = await cookies();
-    return cookieStore.get(SESSION_TOKEN_COOKIE_NAME)?.value !== null;
-  },
   getSessionToken: async (): Promise<string | null> => {
     const cookieStore = await cookies();
     return cookieStore.get(SESSION_TOKEN_COOKIE_NAME)?.value ?? null;
