@@ -1,17 +1,14 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import Image from 'next/image';
 import Link from 'next/link';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 import { Button, Card, Input, SubmitButton } from '@/component/common';
 
 import { useBoardMutation } from '@/service/board/mutation';
-
-import { IMAGE_STORAGE_PATH } from '@/share/const';
 
 const formSchema = z.object({
   title: z.string().min(1, '제목은 최소 1자 이상이어야 합니다.').max(255, '제목은 최대 255자 이하여야 합니다.'),
@@ -30,37 +27,9 @@ export default function BoardWriteForm() {
     resolver: zodResolver(formSchema),
   });
 
-  const imageRef = useRef<HTMLInputElement>(null);
   const [image, setImage] = useState<string | null>(null);
 
   const { uploadImage, createBoard } = useBoardMutation();
-
-  const handleImageButtonClick = () => {
-    if (imageRef.current) {
-      imageRef.current.click();
-    }
-  };
-
-  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    /*     const file = e.target.files?.[0];
-        if (!file) {
-          return;
-        }
-    
-        const formData = new FormData();
-        formData.append('image', file);
-    
-        const response = await uploadImage.mutateAsync(formData);
-    
-        if (!response.success) {
-          alert(response.message);
-          return;
-        }
-    
-        const { path } = response.data!;
-        setImage(`${IMAGE_STORAGE_PATH}/images/${path}`);
-        imageRef.current!.value = ''; */
-  };
 
   const onSubmit = () => {
     createBoard.mutate({ ...getValues(), image });
@@ -89,19 +58,6 @@ export default function BoardWriteForm() {
             {...register('content')}
           />
           {errors.content && <p className="mt-1 text-sm text-red-500">{errors.content.message}</p>}
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">이미지</label>
-          <input ref={imageRef} type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
-          <Button type="button" onClick={handleImageButtonClick}>
-            이미지 선택
-          </Button>
-          {image && (
-            <div className="mt-4">
-              <Image src={image} alt="이미지 미리보기" width={200} height={200} className="object-cover rounded-lg" />
-            </div>
-          )}
         </div>
 
         <div className="flex justify-end space-x-4">
