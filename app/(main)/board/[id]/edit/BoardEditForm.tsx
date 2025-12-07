@@ -1,28 +1,35 @@
+'use client';
 import Link from 'next/link';
 
 import { Button, Card, Input, SubmitButton } from '@/component/common';
 
-import { updateBoard } from './actions';
+import { useBoardMutation } from '@/service/board/hooks/useBoardMutation';
+import { useGetBoardDetail } from '@/service/board/hooks/useGetBoardDetail';
 
 interface BoardEditFormProps {
   boardId: number;
-  initialTitle: string;
-  initialContent: string;
 }
 
-export default function BoardEditForm({ boardId, initialTitle, initialContent }: BoardEditFormProps) {
-  const updateBoardWithId = updateBoard.bind(null, boardId);
+export default function BoardEditForm({ boardId }: BoardEditFormProps) {
+  const { data: boardData } = useGetBoardDetail(boardId);
+  const { updateBoard } = useBoardMutation();
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    updateBoard.mutate({ boardId, formData });
+  };
 
   return (
     <Card shadow="lg">
-      <form action={updateBoardWithId} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6">
         <div>
           <Input
             name="title"
             type="text"
             label="제목"
             placeholder="제목을 입력하세요"
-            defaultValue={initialTitle}
+            defaultValue={boardData?.data?.title ?? ''}
             fullWidth
             required
           />
@@ -35,7 +42,7 @@ export default function BoardEditForm({ boardId, initialTitle, initialContent }:
             rows={15}
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="내용을 입력하세요"
-            defaultValue={initialContent}
+            defaultValue={boardData?.data?.content ?? ''}
             required
           />
         </div>

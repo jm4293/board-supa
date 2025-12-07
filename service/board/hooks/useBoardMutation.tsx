@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { createBoardAction, deleteBoardAction, uploadImageAction } from "../action";
+import { createBoardAction, deleteBoardAction, uploadImageAction, updateBoardAction } from "../action";
 
 
 export const useBoardMutation = () => {
@@ -17,6 +17,20 @@ export const useBoardMutation = () => {
 
             if (data?.id) {
                 router.push(`/board/${data.id}`);
+            }
+        },
+        onError: (error) => {
+            throw error;
+        },
+    });
+
+    const updateBoard = useMutation({
+        mutationFn: ({ boardId, formData }: { boardId: number; formData: FormData }) => updateBoardAction(boardId, formData),
+        onSuccess: (response) => {
+            const { success, message } = response;
+            if (!success) {
+                alert(message);
+                return;
             }
         },
         onError: (error) => {
@@ -46,5 +60,6 @@ export const useBoardMutation = () => {
         createBoard,
         deleteBoard,
         uploadImage,
+        updateBoard,
     }
 }

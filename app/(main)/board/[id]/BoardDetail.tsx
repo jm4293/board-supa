@@ -6,9 +6,9 @@ import { Button, Card } from '@/component/common';
 
 import { formatDate } from '@/share/utils/format';
 
-import { deleteBoard } from './actions';
 import { useGetBoardDetail } from '@/service/board/hooks/useGetBoardDetail';
 import { useGetUser } from '@/service/user/hooks/useGetUser';
+import { useBoardMutation } from '@/service/board/hooks/useBoardMutation';
 
 interface BoardDetailProps {
   boardId: number;
@@ -17,6 +17,7 @@ interface BoardDetailProps {
 export default function BoardDetail({ boardId }: BoardDetailProps) {
   const { data, isPending } = useGetBoardDetail(boardId);
   const { data: userData } = useGetUser();
+  const { deleteBoard } = useBoardMutation();
 
   // userData.data는 JwtPayload | string | null 타입이므로 타입 가드 필요
   const userAccountId =
@@ -61,7 +62,7 @@ export default function BoardDetail({ boardId }: BoardDetailProps) {
                     수정
                   </Button>
                 </Link>
-                <form action={deleteBoard} className="inline">
+                <form action={() => deleteBoard.mutate(board.id)} className="inline">
                   <input type="hidden" name="boardId" value={board.id} />
                   <Button type="submit" variant="outline" size="sm">
                     삭제
