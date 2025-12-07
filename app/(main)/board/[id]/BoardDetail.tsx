@@ -123,6 +123,11 @@ export default function BoardDetail({ boardId }: BoardDetailProps) {
         <div className="prose max-w-none">
           <div className="whitespace-pre-wrap text-gray-700">{board.content}</div>
         </div>
+        <div className="flex flex-wrap gap-2">
+          {board.boardImage?.map((image) => (
+            <img key={image.id} src={image.imageUrl ?? ''} alt={image.imageName ?? ''} className="w-24 h-24 object-cover" />
+          ))}
+        </div>
       </div>
     </Card>
   );

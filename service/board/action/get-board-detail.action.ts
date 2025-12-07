@@ -5,9 +5,13 @@ import { createClient } from '@/config/supabase/server';
 import { DATABASE_TABLE } from '@/share/const';
 import { ResponseType } from '@/share/type/response.type';
 
-import { BoardModel } from '../model';
+import { BoardImageModel, BoardModel } from '../model';
 
-export const getBoardDetailAction = async (boardId: number): Promise<ResponseType<BoardModel>> => {
+export interface BoardDetailModel extends BoardModel {
+  boardImage?: BoardImageModel[];
+}
+
+export const getBoardDetailAction = async (boardId: number): Promise<ResponseType<BoardDetailModel>> => {
   try {
     if (!boardId || isNaN(boardId)) {
       return {
@@ -19,13 +23,18 @@ export const getBoardDetailAction = async (boardId: number): Promise<ResponseTyp
 
     const supabase = await createClient();
 
-    // 게시글 조회
+    // 게시글 조회 (BoardImage 조인)
     const { data, error } = await supabase
       .from(DATABASE_TABLE.BOARD)
-      .select('*')
+      .select(
+        `
+        *,
+        boardImage:${DATABASE_TABLE.BOARD_IMAGE}(*)
+      `,
+      )
       .eq('id', boardId)
       .eq('isDeleted', 0)
-      .single<BoardModel>();
+      .single<BoardDetailModel>();
 
     if (error || !data) {
       return {
