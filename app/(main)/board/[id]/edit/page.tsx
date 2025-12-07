@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 
-import { getSession } from '@/share/utils/auth';
+import { cookieUtil } from '@/share/utils/cookie';
 
 import BoardEditForm from './BoardEditForm';
 
@@ -9,7 +9,7 @@ interface PageProps {
 }
 
 export default async function BoardEditPage({ params }: PageProps) {
-  const session = await getSession();
+  const session = await cookieUtil.getSessionToken();
 
   if (!session) {
     redirect('/auth/login');

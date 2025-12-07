@@ -2,10 +2,10 @@
 
 import { redirect } from 'next/navigation';
 
-import { getSession } from '@/share/utils/auth';
+import { cookieUtil } from '@/share/utils/cookie';
 
 export async function updateBoard(boardId: number, formData: FormData) {
-  const session = await getSession();
+  const session = await cookieUtil.getSessionToken();
 
   if (!session) {
     redirect('/auth/login');

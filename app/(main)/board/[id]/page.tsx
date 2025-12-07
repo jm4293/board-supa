@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 
-import { authUtil, JwtPayload } from '@/share/utils';
+import { authUtil, JwtPayload } from '@/share/utils/auth';
 import { jwtUtil } from '@/share/utils/jwt';
 
 import BoardDetail from './BoardDetail';
@@ -17,18 +17,9 @@ export default async function BoardDetailPage({ params }: PageProps) {
     redirect('/board');
   }
 
-  // 현재 사용자 정보 가져오기
-  const session = await authUtil.getSession();
-  if (!session) {
-    redirect('/auth/login');
-  }
-
-  const decoded = jwtUtil.decode(session) as JwtPayload | null;
-  const userAccountId = decoded?.userAccountId ?? null;
-
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <BoardDetail boardId={boardId} currentUserId={userAccountId} />
+      <BoardDetail boardId={boardId} />
     </div>
   );
 }

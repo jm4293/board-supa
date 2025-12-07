@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect } from 'react';
 import Link from 'next/link';
 
 import { Button, Card } from '@/component/common';
@@ -8,38 +7,28 @@ import { Button, Card } from '@/component/common';
 import { formatDate } from '@/share/utils/format';
 
 import { deleteBoard } from './actions';
-import { useBoardMutation } from '@/service/board/mutation';
-
-interface Board {
-  id: number;
-  userAccountId: number;
-  title: string;
-  content: string;
-  viewCount: number;
-  isDeleted: number;
-  deletedAt: string;
-  createdAt: string;
-  updatedAt: string;
-}
+import { useGetBoardDetail } from '@/service/board/hooks/useGetBoardDetail';
+import { useGetUser } from '@/service/user/hooks/useGetUser';
 
 interface BoardDetailProps {
   boardId: number;
-  currentUserId: number | null;
 }
 
-export default function BoardDetail({ boardId, currentUserId }: BoardDetailProps) {
-  const { getBoardDetail } = useBoardMutation();
+export default function BoardDetail({ boardId }: BoardDetailProps) {
+  const { data, isPending } = useGetBoardDetail(boardId);
+  const { data: userData } = useGetUser();
 
-  useEffect(() => {
-    getBoardDetail.mutate(boardId);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [boardId]);
+  // userData.data는 JwtPayload | string | null 타입이므로 타입 가드 필요
+  const userAccountId =
+    userData?.data &&
+      typeof userData.data === 'object' &&
+      'userAccountId' in userData.data
+      ? userData.data.userAccountId
+      : null;
 
-  const boardResponse = getBoardDetail.data;
-  const board = boardResponse?.success ? (boardResponse.data as unknown as Board) : null;
+  const board = data?.data ?? null;
 
-
-  if (getBoardDetail.isPending) {
+  if (isPending) {
     return (
       <Card shadow="lg" className="mb-8">
         <div className="p-6">
@@ -65,7 +54,7 @@ export default function BoardDetail({ boardId, currentUserId }: BoardDetailProps
         <div className="flex justify-between items-start mb-4">
           <h1 className="text-3xl font-bold text-gray-900">{board.title}</h1>
           <div className="flex items-center space-x-2">
-            {currentUserId === board.userAccountId && (
+            {userAccountId === board.userAccountId && (
               <>
                 <Link href={`/board/${boardId}/edit`}>
                   <Button variant="secondary" size="sm">
@@ -89,7 +78,7 @@ export default function BoardDetail({ boardId, currentUserId }: BoardDetailProps
         </div>
 
         <div className="flex items-center space-x-4 text-sm text-gray-600 mb-6 pb-6 border-b">
-          <span>{formatDate(board.createdAt)}</span>
+          <span>{formatDate(String(board.createdAt))}</span>
           <span className="flex items-center">
             <svg
               xmlns="http://www.w3.org/2000/svg"

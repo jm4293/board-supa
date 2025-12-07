@@ -6,7 +6,7 @@ import { createClient } from '@/config/supabase/server';
 
 import { DATABASE_TABLE } from '@/share/const';
 import { ResponseType } from '@/share/type/response.type';
-import { authUtil } from '@/share/utils';
+import { authUtil } from '@/share/utils/auth';
 
 export const deleteBoardAction = async (boardId: number): Promise<ResponseType> => {
   try {

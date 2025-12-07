@@ -4,7 +4,8 @@ import { createClient } from '@/config/supabase/server';
 
 import { DATABASE_TABLE } from '@/share/const';
 import { ResponseType } from '@/share/type/response.type';
-import { authUtil, passwordUtil } from '@/share/utils';
+import { authUtil } from '@/share/utils/auth';
+import { passwordUtil } from '@/share/utils';
 import { UserAccountModel, UserModel } from '../model';
 
 export interface LoginUserActionParams {

@@ -4,7 +4,7 @@ import { createClient } from '@/config/supabase/server';
 
 import { DATABASE_TABLE } from '@/share/const';
 import { ResponseType } from '@/share/type/response.type';
-import { JwtPayload, authUtil } from '@/share/utils';
+import { JwtPayload, authUtil } from '@/share/utils/auth';
 import { jwtUtil } from '@/share/utils/jwt';
 
 import { BoardModel } from '../model';

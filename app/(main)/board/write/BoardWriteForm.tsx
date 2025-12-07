@@ -8,7 +8,7 @@ import { z } from 'zod';
 
 import { Button, Card, Input, SubmitButton } from '@/component/common';
 
-import { useBoardMutation } from '@/service/board/mutation';
+import { useBoardMutation } from '@/service/board/hooks';
 
 const formSchema = z.object({
   title: z.string().min(1, '제목은 최소 1자 이상이어야 합니다.').max(255, '제목은 최대 255자 이하여야 합니다.'),

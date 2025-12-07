@@ -2,7 +2,7 @@
 
 import { redirect } from 'next/navigation';
 
-import { authUtil } from '@/share/utils';
+import { authUtil } from '@/share/utils/auth';
 
 export async function deleteBoard(formData: FormData) {
   const boardId = parseInt(formData.get('boardId') as string);
