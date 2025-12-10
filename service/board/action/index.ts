@@ -4,3 +4,4 @@ export * from './get-board-detail.action';
 export * from './update-board.action';
 export * from './delete-board.action';
 export * from './upload-image.action';
+export * from './create-board-comment.action';
