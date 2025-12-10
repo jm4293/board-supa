@@ -24,6 +24,8 @@ export default function BoardDetail({ boardId }: BoardDetailProps) {
   const { data: userData } = useGetUser();
   const { deleteBoard } = useBoardMutation();
   const [comment, setComment] = useState<string>('');
+  const [replyContent, setReplyContent] = useState<string>('');
+  const [openReplyId, setOpenReplyId] = useState<number | null>(null);
   const { data: comments, isPending: isCommentsPending } = useGetBoardComment(boardId);
   const queryClient = useQueryClient();
   const { deleteBoardComment } = useBoardCommentMutation(boardId);
@@ -75,6 +77,31 @@ export default function BoardDetail({ boardId }: BoardDetailProps) {
       setComment('');
       // 댓글 목록 새로고침
       queryClient.invalidateQueries({ queryKey: ['boardComments', boardId] });
+    }
+  };
+
+  const handleSubmitReply = async (parentId: number) => {
+    const response = await createBoardCommentAction({
+      boardId: boardId,
+      userId: userAccountId,
+      content: replyContent,
+      parentId: parentId,
+    });
+
+    if (response.success) {
+      setReplyContent('');
+      setOpenReplyId(null);
+      // 댓글 목록 새로고침
+      queryClient.invalidateQueries({ queryKey: ['boardComments', boardId] });
+    }
+  };
+
+  const handleToggleReply = (commentId: number) => {
+    if (openReplyId === commentId) {
+      setOpenReplyId(null);
+      setReplyContent('');
+    } else {
+      setOpenReplyId(commentId);
     }
   };
 
@@ -197,30 +224,103 @@ export default function BoardDetail({ boardId }: BoardDetailProps) {
             <div className="text-center py-8 text-gray-500">아직 댓글이 없습니다.</div>
           ) : (
             <div className="space-y-6">
-              {comments.data.map((comment) => (
-                <div key={comment.id} className="border-b border-gray-200 pb-4 last:border-0">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <span className="font-semibold text-gray-900">
-                          {comment.user?.username || '익명'}
-                        </span>
-                        <span className="text-sm text-gray-500">
-                          {formatDate(String(comment.createdAt))}
-                        </span>
+              {comments.data
+                .filter((comment) => !comment.parentId)
+                .map((comment) => (
+                  <div key={comment.id} className="border-b border-gray-200 pb-4 last:border-0">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2 mb-2">
+                          <span className="font-semibold text-gray-900">
+                            {comment.user?.username || '익명'}
+                          </span>
+                          <span className="text-sm text-gray-500">
+                            {formatDate(String(comment.createdAt))}
+                          </span>
+                        </div>
+                        <p className="text-gray-700 whitespace-pre-wrap">{comment.content}</p>
                       </div>
-                      <p className="text-gray-700 whitespace-pre-wrap">{comment.content}</p>
+                      {userAccountId === comment.userId && (
+                        <div className="flex items-center space-x-2 ml-4">
+                          <Button variant="text" size="sm" onClick={() => deleteBoardComment.mutate(comment.id)}>
+                            삭제
+                          </Button>
+                        </div>
+                      )}
                     </div>
-                    {userAccountId === comment.userId && (
-                      <div className="flex items-center space-x-2 ml-4">
-                        <Button variant="text" size="sm" onClick={() => deleteBoardComment.mutate(comment.id)}>
-                          삭제
+
+                    {/* 답글 버튼 및 대댓글 작성 폼 */}
+                    {userAccountId && (
+                      <div className="mt-3">
+                        <Button
+                          variant="text"
+                          size="sm"
+                          onClick={() => handleToggleReply(comment.id)}
+                          className="text-blue-600 hover:text-blue-700">
+                          {openReplyId === comment.id ? '답글 취소' : '답글'}
                         </Button>
+
+                        {openReplyId === comment.id && (
+                          <div className="mt-3 ml-4 pl-4 border-l-2 border-gray-200">
+                            <form
+                              onSubmit={(e) => {
+                                e.preventDefault();
+                                handleSubmitReply(comment.id);
+                              }}
+                              className="space-y-3">
+                              <textarea
+                                value={replyContent}
+                                onChange={(e) =>
+                                  setReplyContent(e.target.value)
+                                }
+                                rows={3}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none text-sm"
+                                placeholder={`${comment.user?.username || '익명'}님에게 답글 달기...`}
+                              />
+                              <div className="flex justify-end">
+                                <Button type="submit" variant="primary" size="sm">
+                                  답글 작성
+                                </Button>
+                              </div>
+                            </form>
+                          </div>
+                        )}
                       </div>
                     )}
+
+                    {/* 대댓글 목록 */}
+                    {comments.data
+                      ?.filter((reply) => reply.parentId === comment.id)
+                      .map((reply) => (
+                        <div key={reply.id} className="mt-4 ml-8 pl-4 border-l-2 border-gray-200">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center space-x-2 mb-2">
+                                <span className="font-semibold text-gray-900">
+                                  {reply.user?.username || '익명'}
+                                </span>
+                                <span className="text-sm text-gray-500">
+                                  {formatDate(String(reply.createdAt))}
+                                </span>
+                              </div>
+                              <p className="text-gray-700 whitespace-pre-wrap text-sm">{reply.content}</p>
+                            </div>
+                            {userAccountId === reply.userId && (
+                              <div className="flex items-center space-x-2 ml-4">
+                                <Button
+                                  variant="text"
+                                  size="sm"
+                                  onClick={() => deleteBoardComment.mutate(reply.id)}
+                                  className="text-xs">
+                                  삭제
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
                   </div>
-                </div>
-              ))}
+                ))}
             </div>
           )}
         </div>
