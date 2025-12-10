@@ -1,6 +1,8 @@
 'use client';
 
 import Link from 'next/link';
+import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 
 import { Button, Card } from '@/component/common';
 
@@ -9,8 +11,9 @@ import { formatDate } from '@/share/utils/format';
 import { useGetBoardDetail } from '@/service/board/hooks/useGetBoardDetail';
 import { useGetUser } from '@/service/user/hooks/useGetUser';
 import { useBoardMutation } from '@/service/board/hooks/useBoardMutation';
-import { useState } from 'react';
 import { createBoardCommentAction } from '@/service/board/action';
+import useGetBoardComment from '@/service/board/hooks/useGetBoardComment';
+import { useBoardCommentMutation } from '@/service/board/hooks/useBoardCommentMutation';
 
 interface BoardDetailProps {
   boardId: number;
@@ -21,6 +24,9 @@ export default function BoardDetail({ boardId }: BoardDetailProps) {
   const { data: userData } = useGetUser();
   const { deleteBoard } = useBoardMutation();
   const [comment, setComment] = useState<string>('');
+  const { data: comments, isPending: isCommentsPending } = useGetBoardComment(boardId);
+  const queryClient = useQueryClient();
+  const { deleteBoardComment } = useBoardCommentMutation(boardId);
 
   // userData.data는 JwtPayload | string | null 타입이므로 타입 가드 필요
   const userAccountId =
@@ -67,6 +73,8 @@ export default function BoardDetail({ boardId }: BoardDetailProps) {
 
     if (response.success) {
       setComment('');
+      // 댓글 목록 새로고침
+      queryClient.invalidateQueries({ queryKey: ['boardComments', boardId] });
     }
   };
 
@@ -138,7 +146,7 @@ export default function BoardDetail({ boardId }: BoardDetailProps) {
                   d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
                 />
               </svg>
-              댓글 {board.viewCount}
+              댓글 {comments?.data?.length ?? 0}
             </span>
           </div>
 
@@ -179,39 +187,42 @@ export default function BoardDetail({ boardId }: BoardDetailProps) {
       {/* 댓글 목록 */}
       <Card shadow="md">
         <div className="p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">댓글 0개</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">
+            댓글 {comments?.data?.length ?? 0}개
+          </h2>
 
-          {/* 댓글이 없을 때 */}
-          <div className="text-center py-8 text-gray-500">아직 댓글이 없습니다.</div>
-
-          {/* 댓글이 있을 때 예시 구조 */}
-          {/* 
-          <div className="space-y-6">
-            {comments.map((comment) => (
-              <div key={comment.id} className="border-b border-gray-200 pb-4 last:border-0">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <span className="font-semibold text-gray-900">{comment.user?.username || '익명'}</span>
-                      <span className="text-sm text-gray-500">{formatDate(String(comment.createdAt))}</span>
+          {isCommentsPending ? (
+            <div className="text-center py-8 text-gray-500">댓글을 불러오는 중...</div>
+          ) : !comments?.data || comments.data.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">아직 댓글이 없습니다.</div>
+          ) : (
+            <div className="space-y-6">
+              {comments.data.map((comment) => (
+                <div key={comment.id} className="border-b border-gray-200 pb-4 last:border-0">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <span className="font-semibold text-gray-900">
+                          {comment.user?.username || '익명'}
+                        </span>
+                        <span className="text-sm text-gray-500">
+                          {formatDate(String(comment.createdAt))}
+                        </span>
+                      </div>
+                      <p className="text-gray-700 whitespace-pre-wrap">{comment.content}</p>
                     </div>
-                    <p className="text-gray-700 whitespace-pre-wrap">{comment.content}</p>
+                    {userAccountId === comment.userId && (
+                      <div className="flex items-center space-x-2 ml-4">
+                        <Button variant="text" size="sm" onClick={() => deleteBoardComment.mutate(comment.id)}>
+                          삭제
+                        </Button>
+                      </div>
+                    )}
                   </div>
-                  {userAccountId === comment.userId && (
-                    <div className="flex items-center space-x-2 ml-4">
-                      <Button variant="text" size="sm">
-                        수정
-                      </Button>
-                      <Button variant="text" size="sm">
-                        삭제
-                      </Button>
-                    </div>
-                  )}
                 </div>
-              </div>
-            ))}
-          </div>
-          */}
+              ))}
+            </div>
+          )}
         </div>
       </Card>
     </>

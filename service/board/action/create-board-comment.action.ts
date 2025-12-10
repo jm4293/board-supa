@@ -30,7 +30,7 @@ export const createBoardCommentAction = async (
 
     const supabase = await createClient();
 
-    const { data, error } = await supabase
+    const result = await supabase
       .from(DATABASE_TABLE.BOARD_COMMENT)
       .insert({
         boardId: boardId,
@@ -43,15 +43,15 @@ export const createBoardCommentAction = async (
       .select()
       .single<BoardCommentModel>();
 
-    if (error) {
+    if (result.error) {
       return {
         success: false,
         data: null,
-        message: error.message || '댓글 작성에 실패했습니다',
+        message: result.error.message || '댓글 작성에 실패했습니다',
       };
     }
 
-    if (!data) {
+    if (!result.data) {
       return {
         success: false,
         data: null,
@@ -61,7 +61,7 @@ export const createBoardCommentAction = async (
 
     return {
       success: true,
-      data: data,
+      data: result.data,
       message: null,
     };
   } catch (error) {
