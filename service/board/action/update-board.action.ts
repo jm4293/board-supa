@@ -6,12 +6,13 @@ import { createClient } from '@/config/supabase/server';
 
 import { DATABASE_TABLE } from '@/share/const';
 
-import { BoardModel } from '../model';
+import { BoardModel, BoardImageModel } from '../model';
 
 export interface UpdateBoardActionParams {
   boardId: number;
   title: string;
   content: string;
+  image?: string | null;
 }
 
 export const updateBoardAction = async (boardId: number, formData: FormData) => {
@@ -26,6 +27,7 @@ export const updateBoardAction = async (boardId: number, formData: FormData) => 
 
     const title = formData.get('title') as string;
     const content = formData.get('content') as string;
+    const image = formData.get('image') as string | null;
 
     if (!title || !title.trim()) {
       return {
@@ -60,7 +62,6 @@ export const updateBoardAction = async (boardId: number, formData: FormData) => 
       };
     }
 
-    // 게시글 수정
     const updateResponse = await supabase
       .from(DATABASE_TABLE.BOARD)
       .update({
@@ -78,6 +79,42 @@ export const updateBoardAction = async (boardId: number, formData: FormData) => 
         data: null,
         message: '게시글 수정에 실패했습니다',
       };
+    }
+
+    // 해당 게시물의 이미지 조회
+    const responseBoardImageData = await supabase
+      .from(DATABASE_TABLE.BOARD_IMAGE)
+      .select('*')
+      .eq('boardId', boardId)
+      .single<BoardImageModel>();
+
+    if (!responseBoardImageData.data) {
+      return {
+        success: false,
+        data: null,
+        message: '이미지가 존재하지 않습니다',
+      };
+    }
+    // 이미지 수정
+    if (image) {
+      const imageName = image.split('/').pop() || null;
+      const imageResponse = await supabase
+        .from(DATABASE_TABLE.BOARD_IMAGE)
+        .update({
+          imageUrl: image,
+          imageName: imageName,
+        })
+        .eq('id', responseBoardImageData.data.id)
+        .select('*')
+        .single<BoardImageModel>();
+
+      if (imageResponse.error) {
+        return {
+          success: false,
+          data: null,
+          message: '이미지 수정에 실패했습니다',
+        };
+      }
     }
 
     redirect(`/board/${boardId}`);
