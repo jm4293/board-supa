@@ -1,10 +1,6 @@
 'use server';
 
-import { createClient } from '@/config/supabase/server';
-
-import { DATABASE_TABLE } from '@/share/const';
-import { ResponseType } from '@/share/type/response.type';
-import { passwordUtil } from '@/share/utils';
+import { API_URL } from '@/config/nestjs/api';
 
 import { UserAccountModel, UserModel } from '../model';
 
@@ -12,63 +8,53 @@ export interface RegisterUserActionParams {
   username: string;
   email: string;
   password: string;
-  passwordConfirm: string;
 }
 
-export const registerUserAction = async (
-  params: RegisterUserActionParams,
-): Promise<ResponseType<{ user: UserModel; userAccount: UserAccountModel }>> => {
+export const registerUserAction = async (params: RegisterUserActionParams) => {
   const { username, email, password } = params;
 
-  const supabase = await createClient();
-
   try {
-    // USER_ACCOUNT 테이블에 해당하는 계정 있는지 확인
-    const userAccountResponse = await supabase
-      .from(DATABASE_TABLE.USER_ACCOUNT)
-      .select('*')
-      .eq('email', email)
-      .single();
+    const response = await fetch(`${API_URL}/users`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        username,
+        nickname: username,
+        email,
+        password,
+        provider: 0,
+      }),
+    });
 
-    if (userAccountResponse.data) {
+    const result = await response.json();
+
+    if (!response.ok) {
       return {
         success: false,
         data: null,
-        message: '이미 존재하는 이메일입니다',
+        message: result.message || '회원가입에 실패했습니다',
       };
     }
 
-    const newUser = await supabase
-      .from(DATABASE_TABLE.USER)
-      .insert<Pick<UserModel, 'username' | 'nickname' | 'profileImage' | 'status'>>({
-        username,
-        nickname: username,
-        profileImage: null,
-        status: 1,
-      })
-      .select('*')
-      .single();
-
-    const newUserAccount = await supabase
-      .from(DATABASE_TABLE.USER_ACCOUNT)
-      .insert<Pick<UserAccountModel, 'userId' | 'email' | 'password' | 'provider'>>({
-        userId: newUser.data?.id,
-        email,
-        password: await passwordUtil.hashPassword(password),
-        provider: 1,
-      })
-      .select('*')
-      .single();
-
     return {
       success: true,
-      data: {
-        user: newUser.data,
-        userAccount: newUserAccount.data,
-      },
+      data: result as { user: UserModel; userAccount: UserAccountModel },
       message: null,
     };
   } catch (error) {
-    throw error;
+    if (error instanceof Error) {
+      return {
+        success: false,
+        data: null,
+        message: `회원가입 중 오류가 발생했습니다: ${error.message}`,
+      };
+    }
+    return {
+      success: false,
+      data: null,
+      message: '회원가입 중 오류가 발생했습니다',
+    };
   }
 };

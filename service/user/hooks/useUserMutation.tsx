@@ -1,7 +1,10 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 
-import { LoginUserActionParams, RegisterUserActionParams, loginUserAction, logoutUserAction, registerUserAction, requestKakaoTokenAction } from '../action';
+import { loginUserAction, LoginUserActionParams } from '../action/login-user.action';
+import { registerUserAction, RegisterUserActionParams } from '../action/register-user.action';
+import { logoutUserAction } from '../action/logout-user.action';
+import { requestKakaoTokenAction } from '../action/kakao-login.action';
 
 export const useUserMutation = () => {
   const router = useRouter();
@@ -32,9 +35,8 @@ export const useUserMutation = () => {
     mutationFn: (params: RegisterUserActionParams) => registerUserAction(params),
     onSuccess: (response) => {
       const { success, message, data } = response;
-
       if (!success) {
-        alert(message);
+        alert(`회원가입에 실패했습니다: ${message}`);
         return;
       }
 
@@ -91,5 +93,4 @@ export const useUserMutation = () => {
     requestKakaoToken,
     logoutUser,
   };
-
 };
