@@ -38,7 +38,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             };
           }
 
-          // 로그인 실패 시 null 반환 (Error 객체 반환 금지)
           return null;
         } catch {
           throw new CredentialsSignin();

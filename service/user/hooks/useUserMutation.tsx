@@ -13,7 +13,12 @@ export const useUserMutation = () => {
 
   const loginUser = useMutation({
     mutationFn: (params: SigninActionParams) => signinAction(params),
-    onSuccess: async () => {
+    onSuccess: async (response) => {
+
+      if (!response.success) {
+        alert(response.error || '로그인에 실패했습니다.');
+        return;
+      }
       // 사용자 정보 쿼리 캐시 무효화하여 로그인 상태 반영
       queryClient.invalidateQueries({ queryKey: ['user'] });
 

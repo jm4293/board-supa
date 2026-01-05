@@ -21,8 +21,15 @@ export async function signinAction(params: SigninActionParams) {
     return { success: true };
   } catch (error) {
     if (error instanceof AuthError) {
-      return { success: false, error: error.message };
+      return {
+        success: false,
+        error: '이메일 또는 비밀번호가 올바르지 않습니다.',
+      };
     }
-    throw error;
+
+    return {
+      success: false,
+      error: '알 수 없는 오류가 발생했습니다.',
+    };
   }
 }

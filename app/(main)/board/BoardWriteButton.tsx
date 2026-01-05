@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 
 import { Button } from '@/component/common';
-import { checkLoginAction } from '@/service/user/action/check-login.action';
+import { useSession } from 'next-auth/react';
 
 /**
  * 게시글 작성 버튼 컴포넌트
@@ -11,13 +11,12 @@ import { checkLoginAction } from '@/service/user/action/check-login.action';
  * 로그인되어 있지 않으면 alert를 표시합니다.
  */
 export default function BoardWriteButton() {
+    const { data: session } = useSession();
     const router = useRouter();
 
     const handleClick = async () => {
         try {
-            const response = await checkLoginAction();
-
-            if (response.success) {
+            if (session) {
                 router.push('/board/write');
             } else {
                 alert('로그인 해주세요');
