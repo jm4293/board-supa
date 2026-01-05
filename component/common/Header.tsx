@@ -2,11 +2,13 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { signOut, useSession } from 'next-auth/react';
 
-import HeaderAuthButtons from './HeaderAuthButtons';
+import Button from './Button';
 
 export default function Header() {
   const pathname = usePathname();
+  const { data: session } = useSession();
 
   const isActive = (path: string) => {
     return pathname === path ? 'text-blue-600 font-semibold' : 'text-gray-700 hover:text-blue-600';
@@ -30,7 +32,28 @@ export default function Header() {
             </nav>
           </div>
 
-          <HeaderAuthButtons />
+          <div className="flex items-center space-x-4">
+            {session?.user ? (
+              <>
+                <span className="text-gray-700">{session.user.name}님 환영합니다</span>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={async () => {
+                    await signOut();
+                  }}
+                >
+                  로그아웃
+                </Button>
+              </>
+            ) : (
+              <Link href="/auth/login">
+                <Button variant="primary" size="sm">
+                  로그인
+                </Button>
+              </Link>
+            )}
+          </div>
         </div>
       </div>
     </header>

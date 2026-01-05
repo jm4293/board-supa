@@ -34,12 +34,7 @@ export default function AuthRegisterForm() {
   const { registerUser } = useUserMutation();
 
   const onSubmit = () => {
-    const formData = getValues();
-    registerUser.mutate({
-      username: formData.username,
-      email: formData.email,
-      password: formData.password,
-    });
+    registerUser.mutate(getValues());
   };
 
   return (

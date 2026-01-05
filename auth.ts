@@ -1,10 +1,16 @@
 import NextAuth, { CredentialsSignin } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import Kakao from 'next-auth/providers/kakao';
+import { object, string } from 'zod';
 
 import { loginUserAction } from '@/service/user/action/login-user.action';
 
-const { handlers, auth, signIn, signOut } = NextAuth({
+export const signInSchema = object({
+  email: string().min(1, 'Email is required').email('Invalid email'),
+  password: string().min(4, 'Password must be more than 4 characters'),
+});
+
+export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
     CredentialsProvider({
       name: 'Credentials',
@@ -14,26 +20,29 @@ const { handlers, auth, signIn, signOut } = NextAuth({
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
-        const { email, password } = credentials;
-        if (!email || !password) {
+        try {
+          // 폼 검증
+          const { email, password } = await signInSchema.parseAsync(credentials);
+
+          const emailString = email as string;
+          const passwordString = password as string;
+
+          const response = await loginUserAction({ email: emailString, password: passwordString });
+
+          if (response.success && response.data) {
+            const { accessToken } = response.data;
+            return {
+              email: emailString,
+              name: emailString.split('@')[0] || emailString, // 이메일의 @ 앞부분을 이름으로 사용
+              accessToken: accessToken,
+            };
+          }
+
+          // 로그인 실패 시 null 반환 (Error 객체 반환 금지)
+          return null;
+        } catch {
           throw new CredentialsSignin();
         }
-
-        const emailString = email as string;
-        const passwordString = password as string;
-
-        const response = await loginUserAction({ email: emailString, password: passwordString });
-
-        if (response.success && response.data) {
-          const { accessToken } = response.data;
-          return {
-            email: emailString,
-            name: emailString,
-            accessToken: accessToken,
-          };
-        }
-
-        return null;
       },
     }),
     // @ts-expect-error - NextAuth v5 자동 환경 변수 추론 (AUTH_KAKAO_ID, AUTH_KAKAO_SECRET)
@@ -56,9 +65,6 @@ const { handlers, auth, signIn, signOut } = NextAuth({
       }
       return token;
     },
-    redirect: async () => {
-      return '/home';
-    },
     session: async ({ session, token }) => {
       return {
         ...session,
@@ -70,9 +76,9 @@ const { handlers, auth, signIn, signOut } = NextAuth({
       };
     },
     authorized: async () => {
+      // 사용자 인증 여부 확인
+      // 모든 페이지 공개
       return true;
     },
   },
 });
-
-export { handlers, auth, signIn, signOut };

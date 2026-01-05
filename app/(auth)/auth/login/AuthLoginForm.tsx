@@ -7,8 +7,7 @@ import { z } from 'zod';
 
 import { Card, Input, Link, SubmitButton } from '@/component/common';
 
-import { LoginUserActionParams } from '@/service/user';
-import { signinAction } from '@/service/user/action/signin.action';
+import { LoginUserActionParams, useUserMutation } from '@/service/user';
 
 const formSchema = z.object({
   email: z.email('올바른 이메일 형식이 아닙니다'),
@@ -20,18 +19,22 @@ const KAKAO_REDIRECT_URI = process.env.NEXT_PUBLIC_KAKAO_REDIRECT_URI;
 
 export default function AuthLoginForm({ email }: { email: string | undefined }) {
   const {
+    getValues,
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<LoginUserActionParams>({
     resolver: zodResolver(formSchema),
+    mode: 'onSubmit',
     defaultValues: {
-      email,
+      email: email,
     },
   });
 
-  const onSubmit = async (data: LoginUserActionParams) => {
-    await signinAction(data.email, data.password);
+  const { loginUser } = useUserMutation();
+
+  const onSubmit = () => {
+    loginUser.mutate(getValues());
   };
 
   return (

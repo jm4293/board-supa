@@ -1,19 +1,15 @@
 import { type NextRequest, NextResponse } from 'next/server';
 
-export async function middleware(request: NextRequest) {
-  const response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
-  });
+import { auth } from '@/auth';
 
+export default auth(async function middleware(request: NextRequest) {
   // '/' 경로를 '/home'으로 리다이렉트
   if (request.nextUrl.pathname === '/') {
     return NextResponse.redirect(new URL('/home', request.url));
   }
 
-  return response;
-}
+  return NextResponse.next();
+});
 
 export const config = {
   matcher: [

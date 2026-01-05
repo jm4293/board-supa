@@ -1,30 +1,26 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-
-import { loginUserAction, LoginUserActionParams } from '../action/login-user.action';
+import { useSession } from 'next-auth/react';
 import { registerUserAction, RegisterUserActionParams } from '../action/register-user.action';
 import { logoutUserAction } from '../action/logout-user.action';
 import { requestKakaoTokenAction } from '../action/kakao-login.action';
+import { signinAction, SigninActionParams } from '../action/signin.action';
 
 export const useUserMutation = () => {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { update } = useSession();
 
   const loginUser = useMutation({
-    mutationFn: (params: LoginUserActionParams) => loginUserAction(params),
-    onSuccess: (response) => {
-      const { success, message } = response;
-
-      if (!success) {
-        alert(message);
-        return;
-      }
-
+    mutationFn: (params: SigninActionParams) => signinAction(params),
+    onSuccess: async () => {
       // 사용자 정보 쿼리 캐시 무효화하여 로그인 상태 반영
       queryClient.invalidateQueries({ queryKey: ['user'] });
-      alert('로그인이 완료되었습니다.');
 
-      router.push(`/home`);
+      await update();
+
+      router.push('/home');
+      router.refresh();
     },
     onError: (error) => {
       throw error;
